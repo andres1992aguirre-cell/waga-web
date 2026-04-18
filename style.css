@@ -1,0 +1,476 @@
+/* =========================================================
+   VARIABLES GLOBALES (COLORES Y TEMA)
+========================================================= */
+:root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #f8fafc;
+    --accent: #38bdf8;
+    --accent-light: #7dd3fc;
+    --border: #334155;
+    --gold: #fbbf24; /* agregado porque lo usabas */
+}
+
+.light-mode {
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --text: #0f172a;
+    --border: #cbd5e1;
+}
+
+/* =========================================================
+   BASE GENERAL
+========================================================= */
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    transition: all 0.3s ease;
+}
+
+/* =========================================================
+   NAVBAR (BARRA SUPERIOR)
+========================================================= */
+.navbar {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    padding: 20px 0;
+}
+
+.nav-container {
+    width: 95%;
+    display: flex;
+    justify-content: space-between; /* clave */
+    align-items: center;
+}
+
+.nav-left {
+    display: flex;
+}
+
+.nav-right {
+    display: flex;
+    gap: 15px;
+}
+
+.btn-nav {
+    background: var(--card);
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* =========================================================
+   CONTENEDOR PRINCIPAL
+========================================================= */
+.main-container {
+    width: 90%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+}
+
+/* =========================================================
+   VERSÍCULO
+========================================================= */
+.versiculo-frame {
+    width: 100%;
+    border: 3px solid var(--accent);
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    margin-bottom: 40px;
+    box-sizing: border-box;
+}
+
+.versiculo-texto {
+    font-style: italic;
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+.versiculo-pasaje {
+    margin-top: 15px;
+    font-weight: bold;
+    color: var(--accent);
+    display: block;
+}
+
+/* =========================================================
+   TÍTULOS
+========================================================= */
+.titulo-proposito {
+    color: var(--accent-light);
+    margin-bottom: 10px;
+}
+
+.texto-verde-manzana {
+    color: #8ce605 !important;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 0px #000, 
+                 4px 4px 0px rgba(0,0,0,0.2);
+}
+
+/* =========================================================
+   CARDS / ACCESOS
+========================================================= */
+.grid-accesos {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    width: 100%;
+    margin-top: 30px;
+}
+
+.card-acceso {
+    background: var(--card);
+    border: 2px solid var(--border);
+    flex: 1;
+    max-width: 300px;
+    padding: 50px 20px;
+    border-radius: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.card-acceso:hover {
+    border-color: var(--accent);
+    transform: translateY(-5px);
+}
+
+/* =========================================================
+   BOTÓN DONACIÓN FIJO
+========================================================= */
+.donacion-fija {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--card);
+    border: 2px solid var(--accent);
+    padding: 12px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* =========================================================
+   MODAL (LOGIN)
+========================================================= */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--card);
+    padding: 40px;
+    border-radius: 20px;
+    border: 2px solid var(--accent);
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+    text-align: center;
+}
+
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--accent);
+}
+
+/* =========================================================
+   FORMULARIOS
+========================================================= */
+.input-group {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--accent-light);
+    font-size: 0.9rem;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    box-sizing: border-box;
+}
+
+.btn-acceder {
+    width: 100%;
+    padding: 15px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* =========================================================
+   USUARIO (BADGE)
+========================================================= */
+.user-badge {
+    background: var(--card);
+    border: 1px solid var(--accent);
+    padding: 5px 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.user-badge span {
+    font-size: 0.9rem;
+}
+
+.user-badge small {
+    color: var(--accent);
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+/* =========================================================
+   REDES SOCIALES
+========================================================= */
+.redes-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.icono-red {
+    font-size: 1.5rem;
+    text-decoration: none;
+    padding: 10px;
+    background: var(--card);
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    transition: 0.3s;
+}
+
+.icono-red:hover {
+    border-color: var(--accent);
+    transform: scale(1.1);
+}
+
+/* =========================================================
+   CALENDARIOS
+========================================================= */
+.mini-calendario {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 15px;
+    border-radius: 15px;
+    text-align: center;
+}
+
+.calendario-mensual {
+    background: var(--card);
+    border-radius: 15px;
+    padding: 15px;
+    width: 100%;
+    border: 1px solid var(--border);
+}
+
+.cal-header {
+    font-weight: bold;
+    color: var(--accent);
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+.cal-dia-actual {
+    background: var(--accent);
+    color: var(--bg);
+    border-radius: 50%;
+    font-weight: bold;
+}
+
+/* Eventos */
+.color-cena { color: #ff4444; }
+.color-general { color: var(--accent); }
+.color-oracion { color: var(--gold); }
+.color-club { color: #8ce605; }
+
+.hoy-especial { 
+    background: #8ce605;
+    color: black; 
+    font-weight: bold; 
+}
+
+.evento-cena { 
+    border: 1px solid #ff4444; 
+}
+
+/* Calendario específico */
+#calendario-real div {
+    padding: 5px 0;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+
+/* =========================================================
+   SECCIÓN IGLESIA / PÁGINA INTERNA (REPARACIÓN FINAL)
+========================================================= */
+
+.bloque-volver {
+    position: absolute; 
+    top: 20px;          
+    left: 20px;         
+    padding: 0;
+    z-index: 100;
+}
+
+#seccion-iglesia {
+    position: relative; 
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+}
+
+/* Agregamos esto para resetear el contenedor del título */
+.header-seccion {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.titulo-grande, .texto-verde-manzana {
+    font-size: 2.8rem;
+    text-align: center;
+    width: 100%;
+    margin-top: 10px;
+    display: block; /* Esto obliga al título a ocupar todo el ancho y centrarse */
+}
+
+.iglesia-grid {
+    align-items: stretch;
+    margin-bottom: 20px;
+}
+
+.card-reuniones {
+    text-align: left;
+    padding: 25px;
+}
+
+.subtitulo {
+    font-size: 1.3rem;
+}
+
+.card-calendario {
+    padding: 20px;
+}
+
+.info-evento {
+    font-size: 0.85rem;
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    padding: 10px;
+    min-height: 40px;
+}
+
+.redes-seccion-iglesia {
+    text-align: center;
+    margin: 30px 0;
+    background: var(--card);
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid var(--border);
+}
+
+.redes-iconos-grandes {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    font-size: 2rem;
+}
+
+.redes-secundarias {
+    margin-top: 15px;
+    font-size: 0.9rem;
+}
+
+.seccion-mapa {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.mapa-container {
+    width: 100%;
+    height: 350px;
+    border-radius: 15px;
+    overflow: hidden;
+    border: 2px solid var(--border);
+}
+
+.btn-mapa {
+    display: inline-block;
+    margin-top: 15px;
+}
+
+/* =========================================================
+   ESTILO PARA LOGOS COMPLETOS
+========================================================= */
+
+.icono-red-img {
+    width: auto;         /* Deja que el ancho sea proporcional */
+    height: 40px;        /* Altura fija para el footer */
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.icono-red-img:hover {
+    transform: scale(1.1);
+}
+
+/* Logos más grandes para la sección de la Iglesia */
+.redes-iconos-grandes .icono-red-img {
+    height: 60px;
+}
