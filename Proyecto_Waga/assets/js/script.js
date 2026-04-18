@@ -28,42 +28,52 @@ function cerrarLogin() {
 
     🛡️ CONTROL DE ACCESO (SALTO A NUEVA PÁGINA)
     ***********************************************************/
-    function validarAcceso() {
+function validarAcceso() {
     const dniInput = document.getElementById('login-dni').value.trim();
     const passInput = document.getElementById('login-pass').value.trim();
 
-    // CASO ANDY / MULTIMEDIA
-    if (dniInput === "36787384" && passInput === "marcospaz") {
-    cerrarLogin();
+    // 1. Buscamos si el DNI ingresado existe en nuestra lista de miembros
+    const usuarioEncontrado = miembros.find(m => m.dni === dniInput);
 
-     // Ocultamos el resto de la web
-     document.querySelector('.navbar').style.display = 'none';
-     document.querySelector('.main-container').style.display = 'none';
-     document.querySelector('.donacion-fija').style.display = 'none';
+    // 2. Verificamos: Que el usuario exista y que la contraseña sea correcta
+    if (usuarioEncontrado && passInput === "marcospaz") {
+        
+        // Guardamos quién entró para manejar los permisos después
+        usuarioLogueado = usuarioEncontrado;
 
-     // Mostramos el panel de control
-     const panel = document.getElementById('pagina-panel-control');
-     panel.style.display = 'block';
+        cerrarLogin();
 
-     // ========================================================
-     // 🚀 INICIALIZACIÓN DE COMPONENTES DEL PANEL
-     // ========================================================
+        // Ocultamos el resto de la web
+        document.querySelector('.navbar').style.display = 'none';
+        document.querySelector('.main-container').style.display = 'none';
+        document.querySelector('.donacion-fija').style.display = 'none';
 
-     // 1. Ejecutamos el renderizado de la tabla de control anual
-     renderizarTablaMultimedia(); 
+        // Mostramos el panel de control
+        const panel = document.getElementById('pagina-panel-control');
+        panel.style.display = 'block';
 
-     // 2. Ejecutamos el renderizado del calendario privado de Alabanza
-     renderizarCalendarioMinisterio(); 
+        // ========================================================
+        // 🚀 INICIALIZACIÓN DE COMPONENTES DEL PANEL
+        // ========================================================
 
-     // ========================================================
+        // 1. Renderizamos la tabla (Ahora mostrará los 11 miembros)
+        renderizarTablaMultimedia(); 
 
-     alert("¡Bienvenido al Control Anual, Andy!");
+        // 2. Renderizamos el calendario visual
+        renderizarCalendarioMinisterioVisual(); 
+
+        // 3. Configuramos botones extra si es Admin o Colaborador
+        configurarInterfazPorRol(usuarioLogueado);
+
+        // ========================================================
+
+        alert(`¡Bienvenido ${usuarioLogueado.nombre}! Acceso como ${usuarioLogueado.rol.toUpperCase()}`);
 
     } else {
-    // Aquí podrías poner otros accesos para usuarios comunes
-    document.getElementById('login-error').style.display = 'block';
+        // Si no existe el DNI o la pass está mal
+        document.getElementById('login-error').style.display = 'block';
     }
-    }
+}
 
 // *********************************************************
 // * 🧠 LÓGICA DE MIEMBROS Y CÁLCULOS ANUALES
@@ -417,3 +427,227 @@ function renderizarCalendarioMinisterioVisual() {
         grid.appendChild(diaDiv);
     }
 }
+
+// Iniciamos con los 11 miembros actuales. 
+// Todos con DNI 11111111 menos el tuyo.
+let miembros = [
+    { id: 1, nombre: "Andy", dni: "36787384", rol: "admin", asistencia: 100, lectura: "Sí", social: 0, fondo: 0 },
+    { id: 2, nombre: "Benjamín", dni: "11111111", rol: "colaborador", asistencia: 0, lectura: "No", social: 0, fondo: 0 },
+    { id: 3, nombre: "Miembro 3", dni: "11111112", rol: "miembro", asistencia: 0, lectura: "No", social: 0, fondo: 0 },
+    { id: 4, nombre: "Miembro 4", dni: "11111113", rol: "miembro", asistencia: 0, lectura: "No", social: 0, fondo: 0 },
+    { id: 5, nombre: "Miembro 5", dni: "11111114", rol: "miembro", asistencia: 0, lectura: "No", social: 0, fondo: 0 },
+    { id: 6, nombre: "Miembro 6", dni: "11111115", rol: "miembro", asistencia: 0, lectura: "No", social: 0, fondo: 0 },
+    { id: 7, nombre: "Miembro 7", dni: "11111116", rol: "miembro", asistencia: 0, lectura: "No", social: 0, fondo: 0 },
+    { id: 8, nombre: "Miembro 8", dni: "11111117", rol: "miembro", asistencia: 0, lectura: "No", social: 0, fondo: 0 },
+    { id: 9, nombre: "Miembro 9", dni: "11111118", rol: "miembro", asistencia: 0, lectura: "No", social: 0, fondo: 0 },
+    { id: 10, nombre: "Miembro 10", dni: "11111119", rol: "miembro", asistencia: 0, lectura: "No", social: 0, fondo: 0 },
+    { id: 11, nombre: "Miembro 11", dni: "11111121", rol: "miembro", asistencia: 0, lectura: "No", social: 0, fondo: 0 }
+];
+
+let usuarioLogueado = null;
+
+/************************************************
+ * 🛡️ CONTROL DE INTERFAZ POR ROL
+ ************************************************/
+function configurarInterfazPorRol(usuario) {
+    const contenedorAcciones = document.getElementById('acciones-admin-colab');
+    contenedorAcciones.innerHTML = ""; // Limpiar
+
+    // Si es Admin o Colaborador, mostramos el botón de añadir persona
+    if (usuario.rol === "admin" || usuario.rol === "colaborador") {
+        contenedorAcciones.innerHTML = `
+            <button onclick="abrirModalNuevoMiembro()" style="background: #22c55e; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 15px;">
+                + Añadir Nuevo Miembro
+            </button>
+        `;
+    }
+    
+    // El renderizado de la tabla ahora incluirá botones de "Editar" solo para ellos
+    renderizarTablaMultimedia(usuario.rol);
+}
+
+    /************************************************
+            ✏️ SISTEMA DE EDICIÓN DE MIEMBROS
+    ************************************************/
+            
+  let miembroSeleccionadoId = null;
+
+function renderizarTablaMultimedia() {
+    const tabla = document.getElementById('lista-asistencia-anual');
+    if (!tabla) return;
+    
+    let totalSocial = 0;
+    let totalFondo = 0;
+    tabla.innerHTML = "";
+
+    // USAMOS 'miembros' que es la lista que tiene los IDs y DNIs
+    miembros.forEach(m => {
+        totalSocial += m.social;
+        totalFondo += m.fondo;
+
+        const fila = document.createElement('tr');
+        fila.style.borderBottom = "1px solid #334155";
+        
+        let celdaAccion = "";
+        if (usuarioLogueado && (usuarioLogueado.rol === "admin" || usuarioLogueado.rol === "colaborador")) {
+            celdaAccion = `<td style="padding: 12px; text-align: center;">
+                <button onclick="abrirEditor(${m.id})" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">✏️</button>
+            </td>`;
+        }
+
+        fila.innerHTML = `
+            <td style="padding: 12px; color: #fbbf24; font-weight: bold;">${m.nombre}</td>
+            <td style="padding: 12px; text-align: center;">${m.asistencia}%</td>
+            <td style="padding: 12px; text-align: center;">${m.lectura}</td>
+            <td style="padding: 12px; text-align: center;">$ ${m.social}</td>
+            <td style="padding: 12px; text-align: center;">$ ${m.fondo}</td>
+            ${celdaAccion}
+        `;
+        tabla.appendChild(fila);
+    });
+
+    // Actualizamos los cuadros de totales que se ven en tu foto
+    const txtSocial = document.getElementById('txt-total-social');
+    const txtFondo = document.getElementById('txt-total-fondo');
+    if (txtSocial) txtSocial.innerText = `$ ${totalSocial}`;
+    if (txtFondo) txtFondo.innerText = `$ ${totalFondo}`;
+}
+
+
+
+                /************************************************
+                        🚀 FUNCIONES DE APERTURA DEL MODAL
+                ************************************************/
+
+
+// 1. ESTA ES LA QUE YA TENÉS (Para editar uno existente)
+function abrirEditor(id) {
+    // Agregamos esta línea para que el título cambie
+    document.getElementById('titulo-modal').innerText = "Editar Miembro";
+    
+    const m = miembros.find(item => item.id === id);
+    if (!m) return;
+
+    miembroSeleccionadoId = id;
+
+    document.getElementById('edit-nombre').value = m.nombre;
+    document.getElementById('edit-dni').value = m.dni;
+    document.getElementById('edit-rol').value = m.rol;
+    document.getElementById('edit-asistencia').value = m.asistencia;
+    document.getElementById('edit-lectura').value = m.lectura;
+    document.getElementById('edit-social').value = m.social;
+    document.getElementById('edit-fondo').value = m.fondo;
+
+    document.getElementById('modal-edicion').style.display = 'flex';
+}
+
+// 2. ESTA ES LA QUE TE FALTA (Para el botón de añadir nuevo)
+function abrirModalNuevoMiembro() {
+    // Es vital poner esto en null para que el sistema sepa que es NUEVO
+    miembroSeleccionadoId = null; 
+
+    document.getElementById('titulo-modal').innerText = "Añadir Nuevo Miembro";
+    
+    // Limpiamos los campos para que estén vacíos
+    document.getElementById('edit-nombre').value = "";
+    document.getElementById('edit-dni').value = "";
+    document.getElementById('edit-rol').value = "miembro";
+    document.getElementById('edit-asistencia').value = 0;
+    document.getElementById('edit-lectura').value = "No";
+    document.getElementById('edit-social').value = 0;
+    document.getElementById('edit-fondo').value = 0;
+
+    document.getElementById('modal-edicion').style.display = 'flex';
+}
+
+function cerrarModal() {
+    document.getElementById('modal-edicion').style.display = 'none';
+}
+
+function guardarCambios() {
+    const index = miembros.findIndex(m => m.id === miembroSeleccionadoId);
+    
+    if (index !== -1) {
+        // Actualizar la base de datos local
+        miembros[index].nombre = document.getElementById('edit-nombre').value;
+        miembros[index].dni = document.getElementById('edit-dni').value;
+        miembros[index].rol = document.getElementById('edit-rol').value;
+        miembros[index].asistencia = parseInt(document.getElementById('edit-asistencia').value);
+        miembros[index].lectura = document.getElementById('edit-lectura').value;
+        miembros[index].social = parseInt(document.getElementById('edit-social').value);
+        miembros[index].fondo = parseInt(document.getElementById('edit-fondo').value);
+
+        cerrarModal();
+        renderizarTablaMultimedia(); // Refrescar la tabla con los nuevos datos
+        alert("Datos actualizados correctamente.");
+    }
+}          
+
+            /************************************************
+                    ➕ LÓGICA PARA AÑADIR NUEVO MIEMBRO
+            ************************************************/
+
+ // Función para abrir el modal vacío para un nuevo miembro
+function abrirModalNuevoMiembro() {
+    miembroSeleccionadoId = null; // Indicamos que es uno NUEVO, no una edición
+
+    // Limpiamos todos los campos del modal
+    document.getElementById('titulo-modal').innerText = "Añadir Nuevo Miembro";
+    document.getElementById('edit-nombre').value = "";
+    document.getElementById('edit-dni').value = "";
+    document.getElementById('edit-rol').value = "miembro";
+    document.getElementById('edit-asistencia').value = 0;
+    document.getElementById('edit-lectura').value = "No";
+    document.getElementById('edit-social').value = 0;
+    document.getElementById('edit-fondo').value = 0;
+
+    // Mostramos el modal
+    document.getElementById('modal-edicion').style.display = 'flex';
+}
+
+// Modificamos la función de guardar para que sepa si es NUEVO o EDICIÓN
+function guardarCambios() {
+    const nombre = document.getElementById('edit-nombre').value.trim();
+    const dni = document.getElementById('edit-dni').value.trim();
+
+    if (nombre === "" || dni === "") {
+        alert("Por favor, completa al menos el nombre y el DNI.");
+        return;
+    }
+
+    if (miembroSeleccionadoId === null) {
+        // --- LÓGICA PARA AÑADIR NUEVO ---
+        const nuevoId = miembros.length > 0 ? Math.max(...miembros.map(m => m.id)) + 1 : 1;
+        
+        const nuevoMiembro = {
+            id: nuevoId,
+            nombre: nombre,
+            dni: dni,
+            rol: document.getElementById('edit-rol').value,
+            asistencia: parseInt(document.getElementById('edit-asistencia').value) || 0,
+            lectura: document.getElementById('edit-lectura').value,
+            social: parseInt(document.getElementById('edit-social').value) || 0,
+            fondo: parseInt(document.getElementById('edit-fondo').value) || 0
+        };
+
+        miembros.push(nuevoMiembro);
+        alert("¡Miembro añadido con éxito!");
+
+    } else {
+        // --- LÓGICA PARA EDITAR EXISTENTE (La que ya tenías) ---
+        const index = miembros.findIndex(m => m.id === miembroSeleccionadoId);
+        if (index !== -1) {
+            miembros[index].nombre = nombre;
+            miembros[index].dni = dni;
+            miembros[index].rol = document.getElementById('edit-rol').value;
+            miembros[index].asistencia = parseInt(document.getElementById('edit-asistencia').value) || 0;
+            miembros[index].lectura = document.getElementById('edit-lectura').value;
+            miembros[index].social = parseInt(document.getElementById('edit-social').value) || 0;
+            miembros[index].fondo = parseInt(document.getElementById('edit-fondo').value) || 0;
+            alert("Datos actualizados.");
+        }
+    }
+
+    cerrarModal();
+    renderizarTablaMultimedia(); // Refresca la tabla para que aparezca el nuevo
+}   

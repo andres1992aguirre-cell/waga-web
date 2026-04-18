@@ -106,6 +106,24 @@
     <a href="https://www.youtube.com/@ICEMarcosPaz" target="_blank">
         <img src="assets/img/Logo de Youtube COMPLETO.png" alt="YouTube" class="icono-red-img">
     </a>
+
+
+         <!-- ========= PARA GITHUB ME TOMA LAS IMAGENES  ==================
+                  
+    <a href="https://www.instagram.com/ice.marcos.paz/" target="_blank">
+    <img src="Logo de Instagram COMPLETO.png" alt="Instagram" class="icono-red-img">
+</a>
+<a href="https://www.tiktok.com/@icemarcospaz" target="_blank">
+    <img src="Logo de Tik Tok COMPLETO.png" alt="TikTok" class="icono-red-img">
+</a>
+<a href="https://www.youtube.com/@ICEMarcosPaz" target="_blank">
+    <img src="Logo de Youtube COMPLETO.png" alt="YouTube" class="icono-red-img">
+</a>//
+
+                 =============================================-->
+
+
+
 </div>
         <div style="margin-top: 15px; font-size: 0.9rem;">
             <strong>Club Bíblico:</strong> 
@@ -168,11 +186,7 @@
             </table>
         </div>
 
-        <div id="acciones-especiales" style="display: none; text-align: center; margin: 20px;">
-            <button class="btn-nav" onclick="abrirModalNuevoMiembro()">+ Agregar Persona</button>
-            <button class="btn-nav" onclick="abrirCargaDiaria()">+ Cargar Datos</button>
-        </div>
-
+       
         <div id="contenedor-calendario" style="margin-top: 40px;">
             </div>
     </div>
@@ -270,27 +284,61 @@
     </div>
 </header>
 
+ 
+
+
             
 
 
 
 <!-- ================= CUADRO PRINCIPAL ================= -->
 
+<div id="acciones-admin-colab" style="margin-bottom: 20px; text-align: left;">
+    </div>
+
+<div id="modal-miembro" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100000; align-items: center; justify-content: center;">
+    <div style="background: #1e293b; padding: 30px; border-radius: 15px; width: 400px; color: white; border: 1px solid #fbbf24;">
+        <h2 id="modal-titulo" style="color: #fbbf24; margin-top: 0;">Editar Miembro</h2>
+        
+        <label>Nombre Completo:</label><br>
+        <input type="text" id="edit-nombre" style="width: 100%; padding: 8px; margin: 10px 0; border-radius: 5px; border: none;"><br>
+        
+        <label>DNI:</label><br>
+        <input type="text" id="edit-dni" style="width: 100%; padding: 8px; margin: 10px 0; border-radius: 5px; border: none;"><br>
+
+        <div id="campos-asistencia">
+            <label>Asistencia %:</label>
+            <input type="number" id="edit-asistencia" style="width: 100%; padding: 8px; margin: 10px 0; border-radius: 5px; border: none;">
+            
+            <label>Social ($):</label>
+            <input type="number" id="edit-social" style="width: 100%; padding: 8px; margin: 10px 0; border-radius: 5px; border: none;">
+            
+            <label>Fondo ($):</label>
+            <input type="number" id="edit-fondo" style="width: 100%; padding: 8px; margin: 10px 0; border-radius: 5px; border: none;">
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button onclick="guardarMiembro()" style="flex: 1; background: #22c55e; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold;">Guardar</button>
+            <button onclick="cerrarModal()" style="flex: 1; background: #ef4444; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold;">Cancelar</button>
+        </div>
+    </div>
+</div>
 
 <div style="background: #1e293b; border-radius: 12px; padding: 20px; overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                    <thead>
-                        <tr style="border-bottom: 2px solid #334155;">
-                            <th style="padding: 10px; color: #fbbf24;">MIEMBRO</th>
-                            <th>ASISTENCIA %</th>
-                            <th>LECTURA</th>
-                            <th>SOCIAL</th>
-                            <th>FONDO</th>
-                        </tr>
-                    </thead>
-                    <tbody id="lista-asistencia-anual">
-                        </tbody>
-                </table>
+                <table style="width: 100%; border-collapse: collapse; color: white;">
+    <thead>
+        <tr style="color: #fbbf24; border-bottom: 2px solid #334155;">
+            <th style="padding: 12px; text-align: left;">MIEMBRO</th>
+            <th style="padding: 12px;">ASISTENCIA %</th>
+            <th style="padding: 12px;">LECTURA</th>
+            <th style="padding: 12px;">SOCIAL</th>
+            <th style="padding: 12px;">FONDO</th>
+            <th style="padding: 12px;">ACCIÓN</th>
+        </tr>
+    </thead>
+    <tbody id="lista-asistencia-anual">
+        </tbody>
+</table>
             </div>
 
 
@@ -331,6 +379,61 @@
 
         </div>
     </div>
+
+
+                <!-- ================= Modal de Edición ===================== -->
+
+    <div id="modal-edicion" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: #1e293b; padding: 25px; border-radius: 15px; width: 90%; max-width: 450px; border: 1px solid #fbbf24; color: white; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
+        <h3 id="titulo-modal" style="color: #fbbf24; margin-top: 0; text-align: center;">Editar Miembro</h3>
+        
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <label>Nombre:</label>
+            <input type="text" id="edit-nombre" style="padding: 10px; border-radius: 5px; border: none;">
+            
+            <label>DNI:</label>
+            <input type="text" id="edit-dni" style="padding: 10px; border-radius: 5px; border: none;">
+            
+            <label>Rol:</label>
+            <select id="edit-rol" style="padding: 10px; border-radius: 5px; border: none;">
+                <option value="miembro">Miembro</option>
+                <option value="colaborador">Colaborador</option>
+                <option value="admin">Administrador</option>
+            </select>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                <div>
+                    <label>Asistencia %:</label>
+                    <input type="number" id="edit-asistencia" style="width: 100%; padding: 10px; border-radius: 5px; border: none;">
+                </div>
+                <div>
+                    <label>Lectura:</label>
+                    <select id="edit-lectura" style="width: 100%; padding: 10px; border-radius: 5px; border: none;">
+                        <option value="Sí">Sí</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label>Social $:</label>
+                    <input type="number" id="edit-social" style="width: 100%; padding: 10px; border-radius: 5px; border: none;">
+                </div>
+                <div>
+                    <label>Fondo $:</label>
+                    <input type="number" id="edit-fondo" style="width: 100%; padding: 10px; border-radius: 5px; border: none;">
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 25px; display: flex; gap: 10px;">
+            <button onclick="guardarCambios()" style="flex: 1; background: #22c55e; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">Guardar</button>
+            <button onclick="cerrarModal()" style="flex: 1; background: #ef4444; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">Cancelar</button>
+        </div>
+    </div>
+</div>
+
 
 </body>
 </html>
