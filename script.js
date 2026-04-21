@@ -933,120 +933,17 @@ function cambiarMes(direccion) {
     generarCalendario();
 }
 
-// ARREGLO 3: Ejecutar la función apenas cargue la página
-window.onload = function() {
+// Usamos este escuchador que es más fuerte para GitHub
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("Intentando cargar calendario...");
     generarCalendario();
+});
+
+// Por las dudas, si el anterior falla, este lo asegura
+window.addEventListener("load", generarCalendario);
 };
 
 
 
 
-// ========================================================
-//  CALENDARIO DE PAGINA REUNION DE JOVENES +18 (INTERACTIVO)
-// ========================================================
 
-let fechaZona = new Date(); // Para controlar el mes en la sección de Jóvenes +18
-let zonaActiva = "";
-
-function seleccionarZona(nombreZona) {
-    zonaActiva = nombreZona;
-    navegarA('zona-detalle');
-    document.getElementById('titulo-zona-actual').innerText = "ZONA " + nombreZona.toUpperCase();
-    
-    generarCalendarioZona();
-    cargarListaIglesias(nombreZona);
-}
-
-function generarCalendarioZona() {
-    const grid = document.getElementById("calendario-zona-grid");
-    const etiquetaMes = document.getElementById("mes-actual-zona");
-    const infoEvento = document.getElementById("info-evento-zona");
-    
-    grid.innerHTML = ""; 
-    const mes = fechaZona.getMonth();
-    const año = fechaZona.getFullYear();
-    const hoy = new Date();
-
-    const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-    etiquetaMes.innerText = `${meses[mes]} ${año}`;
-
-    const primerDia = new Date(año, mes, 1).getDay();
-    const ultimoDia = new Date(año, mes + 1, 0).getDate();
-
-    // Espacios vacíos
-    for (let i = 0; i < primerDia; i++) {
-        grid.appendChild(document.createElement("div"));
-    }
-
-    // Días del mes
-    for (let dia = 1; dia <= ultimoDia; dia++) {
-        const elementoDia = document.createElement("div");
-        elementoDia.innerText = dia;
-        elementoDia.className = "dia-calendario"; // Asegúrate de tener estilos para esto o usa los del anterior
-        
-        // Estilos base (Igual al de Iglesia)
-        Object.assign(elementoDia.style, {
-            padding: "12px 0", cursor: "pointer", borderRadius: "8px", color: "#e2e8f0",
-            background: "rgba(255,255,255,0.05)", fontSize: "1rem", transition: "0.3s", position: "relative"
-        });
-
-        // --- BUSCAR EVENTOS DE IGLESIAS EN ESTA ZONA ---
-        let eventosDelDia = [];
-        let puntosColores = [];
-
-        if (datosZonas[zonaActiva]) {
-            datosZonas[zonaActiva].iglesias.forEach(iglesia => {
-                iglesia.reuniones.forEach(reunion => {
-                    if (reunion.dia === dia) {
-                        eventosDelDia.push(`<span style="color:${iglesia.color}">●</span> <strong>${iglesia.nombre}:</strong> ${reunion.tipo} (${reunion.hora}hs)`);
-                        puntosColores.push(iglesia.color);
-                    }
-                });
-            });
-        }
-
-        // Dibujar puntitos si hay reuniones
-        if (puntosColores.length > 0) {
-            const contPuntos = document.createElement("div");
-            contPuntos.style = "display: flex; gap: 3px; justify-content: center; position: absolute; bottom: 5px; width: 100%;";
-            puntosColores.forEach(col => {
-                const p = document.createElement("div");
-                p.style = `width: 6px; height: 6px; background: ${col}; border-radius: 50%;`;
-                contPuntos.appendChild(p);
-            });
-            elementoDia.appendChild(contPuntos);
-        }
-
-        // Click para ver detalle
-        elementoDia.onclick = () => {
-            if (eventosDelDia.length > 0) {
-                infoEvento.innerHTML = `<strong>Reuniones del día ${dia}:</strong><br>` + eventosDelDia.join("<br>");
-            } else {
-                infoEvento.innerText = "No hay reuniones programadas para este día.";
-            }
-        };
-
-        grid.appendChild(elementoDia);
-    }
-}
-
-function cambiarMesZona(dir) {
-    fechaZona.setMonth(fechaZona.getMonth() + dir);
-    generarCalendarioZona();
-}
-
-function cargarListaIglesias(nombreZona) {
-    const lista = document.getElementById('lista-iglesias-zona');
-    lista.innerHTML = ""; 
-    if(datosZonas[nombreZona]) {
-        datosZonas[nombreZona].iglesias.forEach(iglesia => {
-            lista.innerHTML += `
-                <div class="card-acceso" style="border-left: 6px solid ${iglesia.color}; text-align: left; padding: 20px; width: 100%; margin-bottom: 15px;">
-                    <h3 style="margin: 0; color: white;">${iglesia.nombre}</h3>
-                    <p style="margin: 5px 0; color: #ccc;">📍 ${iglesia.direccion}</p>
-                    <small style="color: ${iglesia.color}">Días de reunión: ${iglesia.reuniones.map(r => r.dia).join(", ")}</small>
-                </div>
-            `;
-        });
-    }
-}
