@@ -833,6 +833,9 @@ function generarCalendario() {
     const etiquetaMes = document.getElementById("mes-actual");
     const infoEvento = document.getElementById("info-evento");
     
+    // ARREGLO 1: Si los elementos no existen en la página actual, detener la función para que no de error
+    if (!grid || !etiquetaMes) return;
+
     grid.innerHTML = ""; 
 
     const mes = fechaVisualizada.getMonth();
@@ -866,26 +869,26 @@ function generarCalendario() {
         elementoDia.style.fontSize = "0.9rem";
         elementoDia.style.transition = "all 0.3s";
         elementoDia.style.position = "relative";
+        elementoDia.style.textAlign = "center"; // Centrar los números
 
-        // --- LÓGICA DE EVENTOS (Múltiples colores) ---
+        // --- LÓGICA DE EVENTOS ---
         let eventosDelDia = [];
         let coloresPuntos = [];
 
         if (diaSemana === 0) { // DOMINGOS
             contadorDomingos++;
             eventosDelDia.push("11:30hs: Reunión General");
-            coloresPuntos.push("#38bdf8"); // Azul
+            coloresPuntos.push("#38bdf8"); 
             if (contadorDomingos === 1 || contadorDomingos === 3) {
                 eventosDelDia.unshift("10:00hs: Cena del Señor");
-                coloresPuntos.push("#ff4444"); // Rojo
+                coloresPuntos.push("#ff4444"); 
             }
         } else if (diaSemana === 5) { // VIERNES
             eventosDelDia.push("21:30hs: Reunión de Oración");
-            coloresPuntos.push("#fbbf24"); // Amarillo
+            coloresPuntos.push("#fbbf24"); 
         } else if (diaSemana === 6) { // SÁBADOS
             eventosDelDia.push("14:00hs: Club Bíblico");
-            coloresPuntos.push("#8ce605"); // Verde
-            // Evento especial Abril 2026
+            coloresPuntos.push("#8ce605"); 
             if (mes === 3 && año === 2026 && dia === 25) {
                 eventosDelDia.push("10:00hs: Reunión Femenina");
                 coloresPuntos.push("#fbbf24"); 
@@ -895,7 +898,6 @@ function generarCalendario() {
         if (coloresPuntos.length > 0) {
             const contenedorPuntos = document.createElement("div");
             contenedorPuntos.style = "display: flex; gap: 2px; justify-content: center; position: absolute; bottom: 3px; width: 100%;";
-            
             coloresPuntos.forEach(col => {
                 const punto = document.createElement("div");
                 punto.style = `width: 5px; height: 5px; background: ${col}; border-radius: 50%;`;
@@ -904,23 +906,14 @@ function generarCalendario() {
             elementoDia.appendChild(contenedorPuntos);
         }
 
-        // --- MARCAR DÍA DE HOY ---
         if (dia === hoy.getDate() && mes === hoy.getMonth() && año === hoy.getFullYear()) {
             elementoDia.style.border = "2px solid #8ce605";
             elementoDia.style.fontWeight = "bold";
             elementoDia.style.background = "rgba(140, 230, 5, 0.1)";
         }
 
-        elementoDia.onmouseover = () => elementoDia.style.background = "rgba(140, 230, 5, 0.3)";
-        elementoDia.onmouseout = () => {
-            if (dia === hoy.getDate() && mes === hoy.getMonth() && año === hoy.getFullYear()) {
-                elementoDia.style.background = "rgba(140, 230, 5, 0.1)";
-            } else {
-                elementoDia.style.background = "rgba(255,255,255,0.05)";
-            }
-        };
-        
         elementoDia.onclick = () => {
+            if (!infoEvento) return;
             if (eventosDelDia.length > 0) {
                 infoEvento.innerHTML = `<strong>Día ${dia} de ${meses[mes]}:</strong><br>` + eventosDelDia.join("<br>");
                 infoEvento.style.borderLeftColor = coloresPuntos[0] || "#8ce605";
@@ -932,28 +925,18 @@ function generarCalendario() {
 
         grid.appendChild(elementoDia);
     }
+}
 
-    // --- NUEVO: OCULTAR CUADRO DE PRÓXIMOS EVENTOS SI YA PASÓ LA FECHA ---
-    const cuadroAlerta = document.getElementById("cuadro-proximos");
-    if (cuadroAlerta) {
-        const hoySinHora = new Date();
-        hoySinHora.setHours(0, 0, 0, 0); // Solo comparamos días
-        const fechaLimite = new Date(2026, 3, 25); // 25 de Abril
-
-        if (hoySinHora > fechaLimite) {
-            cuadroAlerta.style.display = "none";
-        } else {
-            cuadroAlerta.style.display = "block";
-        }
-    }
-} // Fin de generarCalendario
-
+// ARREGLO 2: Asegurarnos de que la función de cambiar mes llame a generarCalendario
 function cambiarMes(direccion) {
     fechaVisualizada.setMonth(fechaVisualizada.getMonth() + direccion);
     generarCalendario();
 }
 
-document.addEventListener("DOMContentLoaded", generarCalendario);
+// ARREGLO 3: Ejecutar la función apenas cargue la página
+window.onload = function() {
+    generarCalendario();
+};
 
 
 
