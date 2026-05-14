@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<!--
+  multimedia.html — Panel Avance Multimedia
+  Vistas: Semanal / Mensual / Anual
+  Roles: admin y colaborador ven todo y pueden editar
+         miembro solo ve sus propios datos
+-->
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Avance Multimedia - WAGA</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <style>
+    /* ── Pantalla de login ── */
+    #pantalla-login {
+      min-height: 80vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #panel-principal { display: none; }
+
+    /* ── Tabs de vista ── */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--fondo-borde);
+      padding-bottom: 0;
+    }
+    .tab-btn {
+      padding: 0.6rem 1.25rem;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--texto-secundario);
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      margin-bottom: -1px;
+    }
+    .tab-btn:hover  { color: var(--texto-principal); }
+    .tab-btn.activo {
+      color: var(--color-acento);
+      border-bottom-color: var(--color-acento);
+    }
+
+    /* ── Navegador de período ── */
+    .nav-periodo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .nav-periodo button {
+      background: none;
+      border: 1px solid var(--fondo-borde);
+      color: var(--texto-secundario);
+      padding: 0.35rem 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .nav-periodo button:hover {
+      border-color: var(--color-acento);
+      color: var(--color-acento);
+    }
+    .nav-periodo .periodo-label {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--texto-principal);
+      min-width: 180px;
+      text-align: center;
+    }
+    .nav-periodo select {
+      padding: 0.35rem 0.7rem;
+      background: var(--fondo-principal);
+      border: 1px solid var(--fondo-borde);
+      border-radius: 6px;
+      color: var(--texto-principal);
+      font-size: 0.9rem;
+    }
+
+    /* ── Tabla ── */
+    .tabla-wrapper {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--fondo-borde);
+    }
+    .tabla-avance {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      min-width: 600px;
+    }
+    .tabla-avance th {
+      background: var(--fondo-borde);
+      padding: 0.6rem 1rem;
+      text-align: left;
+      color: var(--texto-secundario);
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    .tabla-avance td {
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--fondo-borde);
+      color: var(--texto-principal);
+      vertical-align: middle;
+    }
+    .tabla-avance tr:last-child td { border-bottom: none; }
+    .tabla-avance tr:hover td      { background: rgba(255,255,255,0.03); }
+
+    /* ── Barra de progreso ── */
+    .barra-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-width: 100px;
+    }
+    .barra {
+      flex: 1;
+      height: 6px;
+      background: var(--fondo-borde);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .barra-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.4s;
+    }
+    .barra-fill.verde  { background: #34d399; }
+    .barra-fill.azul   { background: var(--color-primario); }
+    .barra-fill.roja   { background: #f87171; }
+    .barra-num {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--texto-secundario);
+      min-width: 32px;
+      text-align: right;
+    }
+
+    /* ── Badges ── */
+    .badge-temprano { color: #34d399; font-weight: 600; font-size: 0.82rem; }
+    .badge-tarde    { color: #fbbf24; font-weight: 600; font-size: 0.82rem; }
+    .badge-falta    { color: #f87171; font-weight: 600; font-size: 0.82rem; }
+
+    /* ── Cuadros de totales ── */
+    .grilla-totales {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .cuadro-total {
+      background: var(--fondo-tarjeta);
+      border: 1px solid var(--fondo-borde);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .cuadro-total .monto {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--color-acento);
+      display: block;
+    }
+    .cuadro-total .etiqueta {
+      color: var(--texto-secundario);
+      font-size: 0.82rem;
+      margin-top: 0.25rem;
+      display: block;
+    }
+
+    /* ── Sin datos ── */
+    .sin-datos {
+      text-align: center;
+      padding: 3rem;
+      color: var(--texto-apagado);
+      font-size: 0.95rem;
+    }
+
+    /* ── Formularios en modal ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 550px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .grilla-totales { grid-template-columns: 1fr 1fr; }
+    }
+    .campo label {
+      display: block;
+      margin-bottom: 0.35rem;
+      color: var(--texto-secundario);
+      font-size: 0.88rem;
+    }
+    .campo input,
+    .campo select {
+      width: 100%;
+      padding: 0.6rem 0.9rem;
+      background: var(--fondo-principal);
+      border: 1px solid var(--fondo-borde);
+      border-radius: 8px;
+      color: var(--texto-principal);
+      font-size: 0.95rem;
+    }
+    .campo.span2 { grid-column: span 2; }
+    @media (max-width: 550px) {
+      .campo.span2 { grid-column: span 1; }
+    }
+
+    /* ── Modal ── */
+    .modal-fondo {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.75);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+    .modal-caja {
+      width: 520px;
+      max-width: 95vw;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .modal-header button {
+      background: none;
+      border: none;
+      color: var(--texto-secundario);
+      cursor: pointer;
+      font-size: 1.3rem;
+      line-height: 1;
+    }
+
+    /* ── Calendario cumpleaños ── */
+    .cal-cumple {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
+      font-size: 0.85rem;
+    }
+    .cal-c-nom { text-align:center; padding:0.4rem; color:var(--texto-apagado); font-weight:600; font-size:0.75rem; }
+    .cal-c-dia { text-align:center; padding:0.4rem 0.2rem; border-radius:7px; cursor:default; color:var(--texto-secundario); min-height:38px; display:flex; flex-direction:column; align-items:center; }
+    .cal-c-dia.hoy    { background:var(--color-primario); color:white; font-weight:700; }
+    .cal-c-dia.cumple::after { content:'🎂'; font-size:0.6rem; display:block; }
+    .cal-c-dia.vacio  { cursor:default; }
+
+    /* ── Botón editar fila ── */
+    .btn-editar-fila {
+      background: none;
+      border: 1px solid var(--fondo-borde);
+      color: var(--texto-secundario);
+      padding: 0.2rem 0.5rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      transition: all 0.15s;
+    }
+    .btn-editar-fila:hover {
+      border-color: var(--color-acento);
+      color: var(--color-acento);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-izquierda">
+      <a href="iglesia.html" class="btn btn-home">← Iglesia</a>
+      <span style="font-weight:700; color:var(--color-acento);">Avance Multimedia</span>
+    </div>
+    <div class="navbar-derecha">
+      <button id="btn-modo" class="btn-modo" onclick="cambiarModo()">☀️</button>
+      <span id="info-sesion-nav" style="font-size:0.85rem; color:var(--texto-secundario);"></span>
+      <button id="btn-logout" class="btn btn-home" style="display:none;" onclick="logoutConServidor()">
+        Cerrar sesión
+      </button>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════════════
+    PANTALLA DE LOGIN
+  ══════════════════════════════════════════ -->
+  <div id="pantalla-login">
+    <div class="tarjeta" style="width:380px; max-width:90vw;">
+      <h2 style="text-align:center; margin-bottom:0.5rem;">Avance Multimedia</h2>
+      <p style="text-align:center; color:var(--texto-secundario); font-size:0.9rem; margin-bottom:1.5rem;">
+        Ingresá con tu DNI y contraseña
+      </p>
+      <div style="display:flex; flex-direction:column; gap:1rem;">
+        <div>
+          <label style="display:block; margin-bottom:0.35rem; color:var(--texto-secundario); font-size:0.88rem;">DNI</label>
+          <input type="text" id="login-dni" placeholder="Tu número de DNI"
+            style="width:100%; padding:0.65rem; background:var(--fondo-principal); border:1px solid var(--fondo-borde); border-radius:8px; color:var(--texto-principal); font-size:1rem;">
+        </div>
+        <div>
+          <label style="display:block; margin-bottom:0.35rem; color:var(--texto-secundario); font-size:0.88rem;">Contraseña</label>
+          <input type="password" id="login-pass" placeholder="Contraseña"
+            style="width:100%; padding:0.65rem; background:var(--fondo-principal); border:1px solid var(--fondo-borde); border-radius:8px; color:var(--texto-principal); font-size:1rem;"
+            onkeydown="if(event.key==='Enter') loginMultimedia()">
+        </div>
+        <button class="btn btn-primario" style="width:100%; justify-content:center; padding:0.75rem;" onclick="loginMultimedia()">
+          Ingresar
+        </button>
+        <a href="recuperar.html" style="text-align:center; color:var(--color-acento); font-size:0.85rem;">
+          ¿Olvidaste tu contraseña?
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+    PANEL PRINCIPAL
+  ══════════════════════════════════════════ -->
+  <div id="panel-principal">
+    <main class="contenedor">
+
+      <!-- Encabezado + botones admin -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <h2 style="margin-bottom:0.2rem;">Avance Multimedia</h2>
+          <p id="subtitulo-panel" style="color:var(--texto-secundario); font-size:0.88rem;"></p>
+        </div>
+        <div id="botones-admin" style="display:none; gap:0.75rem; flex-wrap:wrap;">
+          <button class="btn btn-secundario" onclick="abrirListaMiembros()">👥 Ver/Editar miembros</button>
+          <button class="btn btn-secundario" onclick="abrirModalMiembro()">+ Registrar miembro</button>
+          <button class="btn btn-primario"   onclick="abrirModalCargar()">📥 Cargar datos</button>
+          <button class="btn btn-home"       onclick="abrirModalMinisterio()">⚙️ Ministerios</button>
+        </div>
+      </div>
+
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab-btn activo" onclick="cambiarTab('semanal',  this)">Semanal</button>
+        <button class="tab-btn"        onclick="cambiarTab('mensual',  this)">Mensual</button>
+        <button class="tab-btn"        onclick="cambiarTab('anual',    this)">Anual</button>
+        <button class="tab-btn"        onclick="cambiarTab('cumple',   this)">🎂 Cumpleaños</button>
+      </div>
+
+      <!-- ── VISTA SEMANAL ── -->
+      <div id="vista-semanal">
+        <div class="nav-periodo">
+          <button onclick="navSemana(-1)">‹ Anterior</button>
+          <span class="periodo-label" id="label-semana">Cargando...</span>
+          <button onclick="navSemana(1)">Siguiente ›</button>
+          <input type="date" id="picker-semana" onchange="irAFechaSemana(this.value)"
+            style="padding:0.35rem 0.7rem; background:var(--fondo-principal); border:1px solid var(--fondo-borde); border-radius:6px; color:var(--texto-principal); font-size:0.88rem;">
+        </div>
+        <div class="tarjeta" style="padding:0;">
+          <div class="tabla-wrapper">
+            <table class="tabla-avance">
+              <thead>
+                <tr>
+                  <th>Miembro</th>
+                  <th>Ministerio</th>
+                  <th>Asistencia</th>
+                  <th>Lecturas</th>
+                  <th>Social</th>
+                  <th>Fondo</th>
+                  <th id="col-editar" style="display:none;"></th>
+                </tr>
+              </thead>
+              <tbody id="tbody-semanal">
+                <tr><td colspan="7" class="sin-datos">Cargando datos...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── VISTA MENSUAL ── -->
+      <div id="vista-mensual" style="display:none;">
+        <div class="nav-periodo">
+          <button onclick="navMes(-1)">‹ Anterior</button>
+          <span class="periodo-label" id="label-mes">Cargando...</span>
+          <button onclick="navMes(1)">Siguiente ›</button>
+          <select id="sel-anio-mes" onchange="cargarMensual()"></select>
+        </div>
+        <div class="tarjeta" style="padding:0;">
+          <div class="tabla-wrapper">
+            <table class="tabla-avance">
+              <thead>
+                <tr>
+                  <th>Miembro</th>
+                  <th>Ministerio</th>
+                  <th>Asistencia</th>
+                  <th>Lecturas</th>
+                  <th>Social</th>
+                  <th>Fondo</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-mensual">
+                <tr><td colspan="6" class="sin-datos">Cargando datos...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── VISTA ANUAL ── -->
+      <div id="vista-anual" style="display:none;">
+        <div class="nav-periodo">
+          <select id="sel-anio-anual" onchange="cargarAnual()" style="font-size:1rem; font-weight:600; padding:0.4rem 0.8rem; background:var(--fondo-principal); border:1px solid var(--fondo-borde); border-radius:6px; color:var(--texto-principal);"></select>
+          <span style="color:var(--texto-secundario); font-size:0.88rem;" id="label-domingos-anual"></span>
+        </div>
+
+        <!-- Totales del año -->
+        <div class="grilla-totales" id="totales-anual">
+          <div class="cuadro-total">
+            <span class="monto" id="tot-social-anual">$0</span>
+            <span class="etiqueta">Total Social del año</span>
+          </div>
+          <div class="cuadro-total">
+            <span class="monto" id="tot-fondo-anual">$0</span>
+            <span class="etiqueta">Total Fondo del año</span>
+          </div>
+          <div class="cuadro-total">
+            <span class="monto" id="tot-domingos-anual">0</span>
+            <span class="etiqueta">Domingos registrados</span>
+          </div>
+        </div>
+
+        <div class="tarjeta" style="padding:0;">
+          <div class="tabla-wrapper">
+            <table class="tabla-avance">
+              <thead>
+                <tr>
+                  <th>Miembro</th>
+                  <th>Ministerio</th>
+                  <th>Asistencia %</th>
+                  <th>Lecturas %</th>
+                  <th>Temprano</th>
+                  <th>Tarde</th>
+                  <th>Faltas</th>
+                  <th>Social</th>
+                  <th>Fondo</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-anual">
+                <tr><td colspan="9" class="sin-datos">Cargando datos...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── VISTA CUMPLEAÑOS ── -->
+      <div id="vista-cumple" style="display:none;">
+        <div class="nav-periodo">
+          <button onclick="navCumpleMes(-1)">‹</button>
+          <span class="periodo-label" id="label-cumple-mes"></span>
+          <button onclick="navCumpleMes(1)">›</button>
+        </div>
+        <div class="grilla-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
+          <div class="tarjeta">
+            <div class="cal-cumple" id="cal-cumple"></div>
+            <p style="font-size:0.75rem; color:var(--texto-apagado); margin-top:0.75rem;">🎂 = cumpleaños</p>
+          </div>
+          <div class="tarjeta">
+            <h3 style="margin-bottom:1rem;">Próximos cumpleaños</h3>
+            <div id="lista-proximos"></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+    MODALES
+  ══════════════════════════════════════════ -->
+
+  <!-- Modal: Cargar datos del domingo -->
+  <div id="modal-cargar" class="modal-fondo">
+    <div class="tarjeta modal-caja">
+      <div class="modal-header">
+        <h3>📥 Cargar datos del domingo</h3>
+        <button onclick="cerrarModal('modal-cargar')">✕</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:1rem;">
+        <div class="form-grid">
+          <div class="campo">
+            <label>Miembro</label>
+            <select id="c-miembro"></select>
+          </div>
+          <div class="campo">
+            <label>Domingo</label>
+            <input type="date" id="c-domingo">
+          </div>
+          <div class="campo">
+            <label>Asistencia</label>
+            <select id="c-asistencia">
+              <option value="temprano">Llegó temprano ✅</option>
+              <option value="tarde">Llegó tarde ⚠️</option>
+              <option value="falta">Faltó ❌</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>Lecturas (0 a 7 días)</label>
+            <input type="number" id="c-lecturas" min="0" max="7" placeholder="Ej: 5">
+          </div>
+          <div class="campo">
+            <label>Social ($)</label>
+            <input type="number" id="c-social" min="0" placeholder="Ej: 500">
+          </div>
+          <div class="campo">
+            <label>Fondo ($)</label>
+            <input type="number" id="c-fondo" min="0" placeholder="Ej: 200">
+          </div>
+        </div>
+        <button class="btn btn-primario" style="width:100%; justify-content:center; padding:0.75rem;" onclick="guardarDatos()">
+          Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Registrar nuevo miembro -->
+  <div id="modal-miembro" class="modal-fondo">
+    <div class="tarjeta modal-caja">
+      <div class="modal-header">
+        <h3 id="titulo-modal-miembro">+ Registrar miembro</h3>
+        <button onclick="cerrarModal('modal-miembro')">✕</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:1rem;">
+        <input type="hidden" id="m-id">
+        <div class="form-grid">
+          <div class="campo">
+            <label>Nombre/s</label>
+            <input type="text" id="m-nombre" placeholder="Juan">
+          </div>
+          <div class="campo">
+            <label>Apellido/s</label>
+            <input type="text" id="m-apellido" placeholder="Pérez">
+          </div>
+          <div class="campo">
+            <label>DNI (será el usuario)</label>
+            <input type="text" id="m-dni" placeholder="12345678">
+          </div>
+          <div class="campo">
+            <label>Fecha de nacimiento</label>
+            <input type="date" id="m-nacimiento">
+          </div>
+          <div class="campo">
+            <label>Mail</label>
+            <input type="email" id="m-mail" placeholder="correo@ejemplo.com">
+          </div>
+          <div class="campo">
+            <label>Teléfono</label>
+            <input type="tel" id="m-telefono" placeholder="11 1234-5678">
+          </div>
+          <div class="campo span2">
+            <label>Apodo / Sobrenombre (cómo lo llamamos)</label>
+            <input type="text" id="m-apodo" placeholder="Ej: Benja, Pipo, Eze">
+          </div>
+          <div class="campo span2">
+            <label>Ministerios (podés marcar varios)</label>
+          <div id="m-ministerios-checks" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.25rem;"></div>
+    </div>
+<div class="campo">
+  <label>Contraseña inicial</label>
+  <input type="text" id="m-pass" placeholder="marcospaz">
+</div>
+        </div>
+        <button class="btn btn-primario" style="width:100%; justify-content:center; padding:0.75rem;" onclick="guardarMiembro()">
+          Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Agregar ministerio -->
+  <div id="modal-ministerio" class="modal-fondo">
+    <div class="tarjeta modal-caja" style="width:400px;">
+      <div class="modal-header">
+        <h3>⚙️ Ministerios</h3>
+        <button onclick="cerrarModal('modal-ministerio')">✕</button>
+      </div>
+      <div id="lista-ministerios-modal" style="margin-bottom:1rem;"></div>
+      <div style="display:flex; gap:0.75rem;">
+        <input type="text" id="nuevo-ministerio" placeholder="Nombre del nuevo ministerio"
+          style="flex:1; padding:0.6rem; background:var(--fondo-principal); border:1px solid var(--fondo-borde); border-radius:8px; color:var(--texto-principal);">
+        <button class="btn btn-primario" onclick="agregarMinisterio()">Agregar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Lista de miembros para editar -->
+<div id="modal-lista-miembros" class="modal-fondo">
+  <div class="tarjeta modal-caja" style="width:600px;">
+    <div class="modal-header">
+      <h3>👥 Miembros</h3>
+      <button onclick="cerrarModal('modal-lista-miembros')">✕</button>
+    </div>
+    <div id="lista-miembros-editar"></div>
+  </div>
+</div>
+
+  <script src="js/darkmode.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+
+    /* ══════════════════════════════════════════════
+       ESTADO GLOBAL
+    ══════════════════════════════════════════════ */
+    let rolActual      = null;
+    let miembrosLista  = [];
+    let ministeriosLista = [];
+
+    // Estado de navegación
+    const hoy = new Date();
+    let semanaIdx   = 0;      // 0 = más reciente, 1 = anterior, etc.
+    let domingosList = [];    // fechas de domingos con datos
+
+    let mesActual   = hoy.getMonth() + 1;
+    let anioMes     = hoy.getFullYear();
+    let anioAnual   = hoy.getFullYear();
+
+    // Calendario cumpleaños
+    const MESES  = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const DIAS_C = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+    let cumpleMesNav  = hoy.getMonth();
+    let cumpleAnioNav = hoy.getFullYear();
+    let miembrosData  = [];
+
+    /* ══════════════════════════════════════════════
+       LOGIN
+    ══════════════════════════════════════════════ */
+    function loginMultimedia() {
+      const dni  = document.getElementById('login-dni').value.trim();
+      const pass = document.getElementById('login-pass').value;
+      loginConServidor(dni, pass,
+        function(usuario) { mostrarPanel(usuario); },
+        function(error)   { alert('Error: ' + error); }
+      );
+    }
+
+    function mostrarPanel(user) {
+      rolActual = user.rol;
+      document.getElementById('pantalla-login').style.display  = 'none';
+      document.getElementById('panel-principal').style.display = 'block';
+      document.getElementById('info-sesion-nav').textContent   = `👤 ${user.nombre} (${user.rol})`;
+      document.getElementById('btn-logout').style.display      = 'inline-flex';
+      document.getElementById('subtitulo-panel').textContent   = `${new Date().getFullYear()} — Sesión: ${user.nombre}`;
+
+      if (user.rol === 'admin' || user.rol === 'colaborador') {
+        document.getElementById('botones-admin').style.display = 'flex';
+        document.getElementById('col-editar').style.display    = '';
+      }
+
+      inicializarPanel();
+    }
+
+    /* ══════════════════════════════════════════════
+       INICIALIZACIÓN
+    ══════════════════════════════════════════════ */
+    async function inicializarPanel() {
+      await cargarMinisterios();
+      await cargarMiembros();
+      await cargarDomingos();
+      cargarSemanal();
+      llenarSelectAnios();
+    }
+
+    async function cargarMiembros() {
+      const data = await llamarAPI('/usuarios');
+      if (data.ok) {
+        miembrosLista = data.datos;
+        // Llenar select de miembros en modal cargar
+        const sel = document.getElementById('c-miembro');
+        sel.innerHTML = '<option value="">— Seleccioná un miembro —</option>' +
+          miembrosLista.map(m => `<option value="${m.id}">${m.apellido}, ${m.nombre}</option>`).join('');
+      }
+    }
+
+    async function cargarMinisterios() {
+  const data = await llamarAPI('/ministerios');
+  if (data.ok) {
+    ministeriosLista = data.datos;
+    renderCheckboxesMinisterios([]);
+    renderListaMinisterios();
+  }
+}
+
+function renderCheckboxesMinisterios(seleccionados) {
+  const cont = document.getElementById('m-ministerios-checks');
+  if (!cont) return;
+  cont.innerHTML = ministeriosLista.map(m => `
+    <label style="display:flex; align-items:center; gap:0.4rem; padding:0.3rem 0.7rem; border:1px solid var(--fondo-borde); border-radius:6px; cursor:pointer; font-size:0.88rem; background:var(--fondo-tarjeta);">
+      <input type="checkbox" value="${m.id}" ${seleccionados.includes(Number(m.id)) ? 'checked' : ''} style="width:auto;">
+      ${m.nombre}
+    </label>
+  `).join('');
+}
+
+    async function cargarDomingos() {
+      const data = await llamarAPI(`/stats/domingos?anio=${anioAnual}`);
+      if (data.ok) {
+        domingosList = data.datos;
+        semanaIdx = 0;
+      }
+    }
+
+    /* ══════════════════════════════════════════════
+       TABS
+    ══════════════════════════════════════════════ */
+    function cambiarTab(vista, btn) {
+      ['semanal','mensual','anual','cumple'].forEach(v => {
+        document.getElementById('vista-' + v).style.display = v === vista ? '' : 'none';
+      });
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('activo'));
+      btn.classList.add('activo');
+
+      if (vista === 'semanal' && domingosList.length === 0) cargarSemanal();
+      if (vista === 'mensual') cargarMensual();
+      if (vista === 'anual')   cargarAnual();
+      if (vista === 'cumple')  { cargarCumpleanos(); mostrarProximos(); }
+    }
+
+    /* ══════════════════════════════════════════════
+       VISTA SEMANAL
+    ══════════════════════════════════════════════ */
+    function navSemana(dir) {
+      if (domingosList.length === 0) return;
+      semanaIdx = Math.max(0, Math.min(domingosList.length - 1, semanaIdx + dir));
+      cargarSemanal();
+    }
+
+    function irAFechaSemana(fecha) {
+      const idx = domingosList.indexOf(fecha);
+      if (idx >= 0) { semanaIdx = idx; cargarSemanal(); }
+    }
+
+    async function cargarSemanal() {
+      const fecha = domingosList[semanaIdx] || '';
+      const label = document.getElementById('label-semana');
+
+      if (!fecha) {
+        label.textContent = 'Sin datos cargados aún';
+        document.getElementById('tbody-semanal').innerHTML =
+          '<tr><td colspan="7" class="sin-datos">No hay datos cargados todavía.</td></tr>';
+        return;
+      }
+
+      // Formato de fecha legible
+      const [a,m,d] = fecha.split('-');
+      label.textContent = `Domingo ${parseInt(d)} de ${MESES[parseInt(m)-1]} ${a}`;
+
+      // Actualizar el date picker
+      document.getElementById('picker-semana').value = fecha;
+
+      const data = await llamarAPI(`/stats/semanal?fecha=${fecha}`);
+      if (!data.ok) return;
+
+      const tbody = document.getElementById('tbody-semanal');
+      const esAdmin = (rolActual === 'admin' || rolActual === 'colaborador');
+
+      if (data.datos.registros.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="sin-datos">No hay registros para esta fecha.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.datos.registros.map(r => `
+        <tr>
+          <td>
+  <div style="font-weight:600;">${r.apodo || r.nombre}</div>
+  <div style="font-size:0.78rem; color:var(--texto-apagado);">${r.apellido}, ${r.nombre}</div>
+</td>
+          <td style="color:var(--texto-secundario); font-size:0.82rem;">${r.ministerio || '—'}</td>
+          <td><span class="badge-${r.asistencia}">${
+            r.asistencia === 'temprano' ? '✅ Temprano' :
+            r.asistencia === 'tarde'    ? '⚠️ Tarde' : '❌ Faltó'
+          }</span></td>
+          <td>
+            <div class="barra-wrap">
+              <div class="barra"><div class="barra-fill azul" style="width:${Math.round(r.lecturas/7*100)}%"></div></div>
+              <span class="barra-num">${r.lecturas}/7</span>
+            </div>
+          </td>
+          <td>$${(r.social||0).toLocaleString('es-AR')}</td>
+          <td>$${(r.fondo||0).toLocaleString('es-AR')}</td>
+          ${esAdmin ? `<td><button class="btn-editar-fila" onclick="editarFila(${r.usuario_id},'${fecha}','${r.asistencia}',${r.lecturas},${r.social},${r.fondo})">✏️ Editar</button></td>` : '<td></td>'}
+        </tr>
+      `).join('');
+    }
+
+    /* ══════════════════════════════════════════════
+       VISTA MENSUAL
+    ══════════════════════════════════════════════ */
+    function navMes(dir) {
+      mesActual += dir;
+      if (mesActual > 12) { mesActual = 1;  anioMes++; }
+      if (mesActual < 1)  { mesActual = 12; anioMes--; }
+      cargarMensual();
+    }
+
+    async function cargarMensual() {
+      const anioSel = document.getElementById('sel-anio-mes')?.value || anioMes;
+      const label   = document.getElementById('label-mes');
+      label.textContent = `${MESES[mesActual-1]} ${anioSel}`;
+
+      const data = await llamarAPI(`/stats/mensual?anio=${anioSel}&mes=${mesActual}`);
+      if (!data.ok) return;
+
+      const tbody = document.getElementById('tbody-mensual');
+
+      if (data.datos.stats.length === 0 || data.datos.domingos === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="sin-datos">No hay datos para este mes.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.datos.stats.map(s => {
+        const pa = s.porcentaje_asistencia;
+        const pl = s.porcentaje_lecturas;
+        const colorA = pa >= 80 ? 'verde' : pa >= 50 ? 'azul' : 'roja';
+        const colorL = pl >= 80 ? 'verde' : pl >= 50 ? 'azul' : 'roja';
+        return `
+          <tr>
+            <td><strong>${s.apellido}, ${s.nombre}</strong></td>
+            <td style="color:var(--texto-secundario); font-size:0.82rem;">${s.ministerio || '—'}</td>
+            <td>
+              <div class="barra-wrap">
+                <div class="barra"><div class="barra-fill ${colorA}" style="width:${pa}%"></div></div>
+                <span class="barra-num">${pa}%</span>
+              </div>
+            </td>
+            <td>
+              <div class="barra-wrap">
+                <div class="barra"><div class="barra-fill ${colorL}" style="width:${pl}%"></div></div>
+                <span class="barra-num">${pl}%</span>
+              </div>
+            </td>
+            <td>$${(s.total_social||0).toLocaleString('es-AR')}</td>
+            <td>$${(s.total_fondo||0).toLocaleString('es-AR')}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    /* ══════════════════════════════════════════════
+       VISTA ANUAL
+    ══════════════════════════════════════════════ */
+    function llenarSelectAnios() {
+      const anioActual = new Date().getFullYear();
+      const selAnual = document.getElementById('sel-anio-anual');
+      const selMes   = document.getElementById('sel-anio-mes');
+      // Mostramos los últimos 5 años + el actual
+      let opts = '';
+      for (let a = anioActual; a >= anioActual - 4; a--) {
+        opts += `<option value="${a}" ${a === anioActual ? 'selected' : ''}>${a}</option>`;
+      }
+      if (selAnual) selAnual.innerHTML = opts;
+      if (selMes)   selMes.innerHTML   = opts;
+    }
+
+    async function cargarAnual() {
+      const anioSel = document.getElementById('sel-anio-anual')?.value || anioAnual;
+
+      const data = await llamarAPI(`/stats/anual?anio=${anioSel}`);
+      if (!data.ok) return;
+
+      // Totales
+      document.getElementById('tot-social-anual').textContent  = '$' + (data.datos.total_social||0).toLocaleString('es-AR');
+      document.getElementById('tot-fondo-anual').textContent   = '$' + (data.datos.total_fondo||0).toLocaleString('es-AR');
+      document.getElementById('tot-domingos-anual').textContent = data.datos.domingos_totales || 0;
+      document.getElementById('label-domingos-anual').textContent =
+        `${data.datos.domingos_totales || 0} domingos registrados`;
+
+      const tbody = document.getElementById('tbody-anual');
+
+      if (!data.datos.stats.length) {
+        tbody.innerHTML = '<tr><td colspan="9" class="sin-datos">No hay datos para este año.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.datos.stats.map(s => {
+        const pa = s.porcentaje_asistencia;
+        const pl = s.porcentaje_lecturas;
+        const colorA = pa >= 80 ? 'verde' : pa >= 50 ? 'azul' : 'roja';
+        const colorL = pl >= 80 ? 'verde' : pl >= 50 ? 'azul' : 'roja';
+        return `
+          <tr>
+            <td><strong>${s.apellido}, ${s.nombre}</strong></td>
+            <td style="color:var(--texto-secundario); font-size:0.82rem;">${s.ministerio || '—'}</td>
+            <td>
+              <div class="barra-wrap">
+                <div class="barra"><div class="barra-fill ${colorA}" style="width:${pa}%"></div></div>
+                <span class="barra-num">${pa}%</span>
+              </div>
+            </td>
+            <td>
+              <div class="barra-wrap">
+                <div class="barra"><div class="barra-fill ${colorL}" style="width:${pl}%"></div></div>
+                <span class="barra-num">${pl}%</span>
+              </div>
+            </td>
+            <td style="text-align:center;">${s.tempranos||0}</td>
+            <td style="text-align:center;">${s.tardes||0}</td>
+            <td style="text-align:center; color:#f87171;">${s.faltas||0}</td>
+            <td>$${(s.total_social||0).toLocaleString('es-AR')}</td>
+            <td>$${(s.total_fondo||0).toLocaleString('es-AR')}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    /* ══════════════════════════════════════════════
+       VISTA CUMPLEAÑOS
+    ══════════════════════════════════════════════ */
+    async function cargarCumpleanos() {
+      if (miembrosData.length === 0) {
+        const data = await llamarAPI('/estadisticas/cumpleanos');
+        if (data.ok) miembrosData = data.datos;
+      }
+      renderCalCumple();
+    }
+
+    function navCumpleMes(dir) {
+      cumpleMesNav += dir;
+      if (cumpleMesNav > 11) { cumpleMesNav = 0;  cumpleAnioNav++; }
+      if (cumpleMesNav < 0)  { cumpleMesNav = 11; cumpleAnioNav--; }
+      renderCalCumple();
+    }
+
+    function renderCalCumple() {
+      document.getElementById('label-cumple-mes').textContent = `${MESES[cumpleMesNav]} ${cumpleAnioNav}`;
+      const cont      = document.getElementById('cal-cumple');
+      const primerDia = new Date(cumpleAnioNav, cumpleMesNav, 1).getDay();
+      const diasEnMes = new Date(cumpleAnioNav, cumpleMesNav + 1, 0).getDate();
+      const hoyD      = new Date();
+
+      const cumpleDias = new Set(
+        miembrosData
+          .map(m => new Date(m.fecha_nac + 'T00:00:00'))
+          .filter(f => f.getMonth() === cumpleMesNav)
+          .map(f => f.getDate())
+      );
+
+      let html = DIAS_C.map(d => `<div class="cal-c-nom">${d}</div>`).join('');
+      for (let i = 0; i < primerDia; i++) html += `<div class="cal-c-dia vacio"></div>`;
+      for (let d = 1; d <= diasEnMes; d++) {
+        const esHoy   = d === hoyD.getDate() && cumpleMesNav === hoyD.getMonth() && cumpleAnioNav === hoyD.getFullYear();
+        const esCumple = cumpleDias.has(d);
+        html += `<div class="cal-c-dia ${esHoy ? 'hoy' : ''} ${esCumple ? 'cumple' : ''}">${d}</div>`;
+      }
+      cont.innerHTML = html;
+    }
+
+    async function mostrarProximos() {
+      if (miembrosData.length === 0) {
+        const data = await llamarAPI('/estadisticas/cumpleanos');
+        if (data.ok) miembrosData = data.datos;
+      }
+      const lista = document.getElementById('lista-proximos');
+      lista.innerHTML = miembrosData.slice(0, 8).map(m => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0; border-bottom:1px solid var(--fondo-borde);">
+          <span style="font-weight:600;">${m.apellido}, ${m.nombre}</span>
+          <span style="font-size:0.82rem; color:var(--texto-secundario);">
+            ${m.dias_faltan === 0 ? '🎂 ¡Hoy!' : `en ${m.dias_faltan} días`}
+            — ${new Date(m.proximo + 'T00:00:00').toLocaleDateString('es-AR', {day:'numeric', month:'long'})}
+          </span>
+        </div>
+      `).join('');
+    }
+
+    /* ══════════════════════════════════════════════
+       MODALES
+    ══════════════════════════════════════════════ */
+    function abrirModalCargar() {
+      // Poner el próximo domingo como fecha predeterminada
+      const h   = new Date();
+      const dia = h.getDay();
+      const diff = dia === 0 ? 0 : 7 - dia;
+      const dom  = new Date(h);
+      dom.setDate(h.getDate() + diff);
+      document.getElementById('c-domingo').value = dom.toISOString().split('T')[0];
+      document.getElementById('modal-cargar').style.display = 'flex';
+    }
+
+    function abrirModalMiembro(usuario = null) {
+      document.getElementById('titulo-modal-miembro').textContent = usuario ? '✏️ Editar miembro' : '+ Registrar miembro';
+      document.getElementById('m-id').value        = usuario?.id || '';
+      document.getElementById('m-nombre').value    = usuario?.nombre || '';
+      document.getElementById('m-apellido').value  = usuario?.apellido || '';
+      document.getElementById('m-dni').value       = usuario?.dni || '';
+      document.getElementById('m-nacimiento').value= usuario?.fecha_nac || '';
+      document.getElementById('m-mail').value      = usuario?.mail || '';
+      document.getElementById('m-telefono').value  = usuario?.telefono || '';
+      document.getElementById('m-apodo').value = usuario?.apodo || '';
+               renderCheckboxesMinisterios(usuario?.ministerios_ids || []);
+      document.getElementById('m-pass').value      = '';
+      document.getElementById('modal-miembro').style.display = 'flex';
+    }
+
+    function abrirModalMinisterio() {
+      document.getElementById('modal-ministerio').style.display = 'flex';
+      renderListaMinisterios();
+    }
+
+    function cerrarModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    // Cerrar modal al hacer clic fuera
+    document.querySelectorAll('.modal-fondo').forEach(m => {
+      m.addEventListener('click', function(e) {
+        if (e.target === this) cerrarModal(this.id);
+      });
+    });
+
+    /* ══════════════════════════════════════════════
+       GUARDAR DATOS
+    ══════════════════════════════════════════════ */
+    async function guardarDatos() {
+      const miembro = document.getElementById('c-miembro').value;
+      const domingo = document.getElementById('c-domingo').value;
+      if (!miembro || !domingo) { alert('Seleccioná el miembro y la fecha'); return; }
+
+      const data = await llamarAPI('/registros/editar', 'PUT', {
+        usuario_id:   parseInt(miembro),
+        fecha_domingo: domingo,
+        asistencia:   document.getElementById('c-asistencia').value,
+        lecturas:     parseInt(document.getElementById('c-lecturas').value) || 0,
+        social:       parseFloat(document.getElementById('c-social').value)  || 0,
+        fondo:        parseFloat(document.getElementById('c-fondo').value)   || 0,
+      });
+
+      if (data.ok) {
+        cerrarModal('modal-cargar');
+        await cargarDomingos();
+        cargarSemanal();
+        alert('✅ Datos guardados correctamente');
+      } else {
+        alert('Error: ' + data.error);
+      }
+    }
+
+    async function guardarMiembro() {
+      const id = document.getElementById('m-id').value;
+      const cuerpo = {
+        nombre:       document.getElementById('m-nombre').value.trim(),
+        apellido:     document.getElementById('m-apellido').value.trim(),
+        dni:          document.getElementById('m-dni').value.trim(),
+        fecha_nac:    document.getElementById('m-nacimiento').value,
+        mail:         document.getElementById('m-mail').value.trim(),
+        telefono:     document.getElementById('m-telefono').value.trim(),
+        apodo: document.getElementById('m-apodo').value.trim(),
+        ministerios: Array.from(document.querySelectorAll('#m-ministerios-checks input:checked')).map(cb => parseInt(cb.value)),
+        contraseña:   document.getElementById('m-pass').value,
+        rol:          'miembro',
+        pagina:       'multimedia',
+      };
+
+      if (!cuerpo.nombre || !cuerpo.apellido || !cuerpo.dni) {
+        alert('Nombre, apellido y DNI son obligatorios');
+        return;
+      }
+
+      const data = id
+        ? await llamarAPI(`/usuarios/${id}`, 'PUT', cuerpo)
+        : await llamarAPI('/usuarios', 'POST', cuerpo);
+
+      if (data.ok) {
+        cerrarModal('modal-miembro');
+        await cargarMiembros();
+        alert('✅ ' + (data.datos?.mensaje || 'Guardado correctamente'));
+      } else {
+        alert('Error: ' + data.error);
+      }
+    }
+
+    /* Editar una fila directamente desde la tabla semanal */
+    function editarFila(usuarioId, fecha, asistencia, lecturas, social, fondo) {
+      document.getElementById('c-miembro').value    = usuarioId;
+      document.getElementById('c-domingo').value    = fecha;
+      document.getElementById('c-asistencia').value = asistencia;
+      document.getElementById('c-lecturas').value   = lecturas;
+      document.getElementById('c-social').value     = social;
+      document.getElementById('c-fondo').value      = fondo;
+      document.getElementById('modal-cargar').style.display = 'flex';
+    }
+
+    /* ══════════════════════════════════════════════
+       MINISTERIOS
+    ══════════════════════════════════════════════ */
+    function renderListaMinisterios() {
+      const lista = document.getElementById('lista-ministerios-modal');
+      if (!lista) return;
+      lista.innerHTML = ministeriosLista.map(m => `
+        <div style="padding:0.45rem 0; border-bottom:1px solid var(--fondo-borde); font-size:0.9rem;">
+          ${m.nombre}
+        </div>
+      `).join('');
+    }
+
+    async function agregarMinisterio() {
+      const nombre = document.getElementById('nuevo-ministerio').value.trim();
+      if (!nombre) return;
+      const data = await llamarAPI('/ministerios', 'POST', { nombre });
+      if (data.ok) {
+        document.getElementById('nuevo-ministerio').value = '';
+        await cargarMinisterios();
+      } else {
+        alert('Error: ' + data.error);
+      }
+    }
+
+
+
+    function abrirListaMiembros() {
+  const lista = document.getElementById('lista-miembros-editar');
+  lista.innerHTML = miembrosLista.map(m => `
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:0.65rem 0; border-bottom:1px solid var(--fondo-borde);">
+      <div>
+        <div style="font-weight:600;">${m.apellido}, ${m.nombre}</div>
+        <div style="font-size:0.82rem; color:var(--texto-secundario);">DNI: ${m.dni} · ${m.mail}</div>
+      </div>
+      <button class="btn-editar-fila" onclick="cerrarModal('modal-lista-miembros'); abrirModalMiembro(${JSON.stringify(m).replace(/"/g, '&quot;')})">
+        ✏️ Editar
+      </button>
+    </div>
+  `).join('');
+  document.getElementById('modal-lista-miembros').style.display = 'flex';
+}
+
+    /* ══════════════════════════════════════════════
+       INICIO
+    ══════════════════════════════════════════════ */
+    document.addEventListener('DOMContentLoaded', function() {
+      const u = getUsuarioActual();
+      if (u) mostrarPanel(u);
+    });
+
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<!--
+  iglesia.html — Iglesia de Marcos Paz
+  Secciones: versículo, bienvenida, reuniones, redes sociales, mapa, acceso a multimedia
+-->
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iglesia de Marcos Paz - WAGA</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <style>
+    .grilla-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 700px) {
+      .grilla-2 { grid-template-columns: 1fr; }
+    }
+    .reunion-item {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--fondo-borde);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .reunion-item:last-child { border-bottom: none; }
+    .badge {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .badge-fija   { background: rgba(59,130,246,0.2); color: #60a5fa; }
+    .badge-futura { background: rgba(167,139,250,0.2); color: #a78bfa; }
+    .red-social-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--fondo-borde);
+      color: var(--texto-principal);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      margin-bottom: 0.6rem;
+    }
+    .red-social-btn:hover {
+      border-color: var(--color-primario);
+      background: var(--fondo-borde);
+    }
+    .mapa-embed {
+      width: 100%;
+      height: 300px;
+      border-radius: 12px;
+      border: 1px solid var(--fondo-borde);
+    }
+    .acceso-multimedia {
+      background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(167,139,250,0.1));
+      border: 1px solid rgba(59,130,246,0.3);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      margin-top: 1.5rem;
+    }
+    /* Mini calendario de reuniones */
+    .calendario-mini {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+      font-size: 0.8rem;
+    }
+    .cal-dia-nombre {
+      text-align: center;
+      padding: 0.3rem;
+      color: var(--texto-apagado);
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+    .cal-dia {
+      text-align: center;
+      padding: 0.35rem;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--texto-secundario);
+      transition: all 0.15s;
+    }
+    .cal-dia:hover { background: var(--fondo-borde); }
+    .cal-dia.hoy {
+      background: var(--color-primario);
+      color: white;
+      font-weight: 700;
+    }
+    .cal-dia.tiene-evento { position: relative; }
+    .cal-dia.tiene-evento::after {
+      content: '';
+      display: block;
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: #a78bfa;
+      margin: 1px auto 0;
+    }
+    .cal-dia.vacio { cursor: default; }
+
+
+    /* Puntos del calendario */
+.cal-dia.tiene-evento { position: relative; }
+.puntos-cal {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+  margin-top: 2px;
+}
+.punto { width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
+.punto-azul   { background: #3b82f6; }
+.punto-morado { background: #a78bfa; }
+.punto-verde  { background: #34d399; }
+.punto-amarillo { background: #fbbf24; }
+.punto-rojo   { background: #f87171; }
+
+/* Panel de info del día seleccionado */
+#info-dia-seleccionado {
+  margin-top: 1rem;
+  border-top: 1px solid var(--fondo-borde);
+  padding-top: 1rem;
+  display: none;
+}
+.evento-dia-item {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  border-left: 3px solid var(--color-primario);
+  background: var(--fondo-principal);
+  font-size: 0.88rem;
+}
+
+
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-izquierda">
+      <a href="index.html" class="btn btn-home">← Home</a>
+      <span style="font-weight:700; color:var(--color-acento);">Iglesia de Marcos Paz</span>
+    </div>
+    <div class="navbar-derecha">
+      <button id="btn-modo" class="btn-modo" onclick="cambiarModo()">☀️</button>
+      <button class="btn btn-secundario" onclick="abrirLogin()">🔐 Ingresar</button>
+    </div>
+  </nav>
+
+  <!-- BARRA DE EDICIÓN (solo visible cuando hay sesión de admin/colaborador) -->
+  <div id="barra-edicion" style="
+    display: none;
+    background: rgba(59,130,246,0.1);
+    border-bottom: 1px solid rgba(59,130,246,0.3);
+    padding: 0.6rem 2rem;
+    display: none;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.85rem;
+  ">
+    <span style="color:var(--color-acento);">✏️ Modo edición activo</span>
+    <button class="btn btn-secundario" style="padding:0.3rem 0.8rem; font-size:0.8rem;" onclick="editarVersiculo()">Editar versículo</button>
+    <button class="btn btn-secundario" style="padding:0.3rem 0.8rem; font-size:0.8rem;" onclick="editarBienvenida()">Editar bienvenida</button>
+    <button class="btn btn-secundario" style="padding:0.3rem 0.8rem; font-size:0.8rem;" onclick="agregarReunion()">+ Reunión</button>
+    <button class="btn btn-secundario" style="padding:0.3rem 0.8rem; font-size:0.8rem;" onclick="editarRedes()">Editar redes</button>
+    <span style="margin-left:auto; color:var(--texto-secundario);" id="nombre-sesion"></span>
+    <button class="btn" style="padding:0.3rem 0.8rem; font-size:0.8rem; color:var(--texto-secundario);" onclick="cerrarSesion()">Cerrar sesión</button>
+  </div>
+
+  <main class="contenedor">
+
+    <!-- TÍTULO Y VERSÍCULO -->
+    <section style="text-align:center; padding: 2.5rem 0 1rem;">
+      <h1 id="titulo-iglesia">Iglesia de Marcos Paz</h1>
+      <div class="versiculo" style="max-width:650px; margin:1.5rem auto;">
+        <p id="versiculo-iglesia">"No temas, porque yo estoy contigo..."</p>
+        <small class="texto-acento" id="ref-versiculo-iglesia">— Isaías 41:10</small>
+      </div>
+    </section>
+
+    <!-- MENSAJE DE BIENVENIDA -->
+    <div class="tarjeta" style="text-align:center; margin-bottom:1.5rem;">
+      <p id="bienvenida-texto" style="color:var(--texto-secundario); font-size:1rem;">
+        Te damos la bienvenida a la Iglesia de Marcos Paz. 
+        Somos una comunidad que busca crecer en la fe, en la Palabra y en el amor fraternal. 
+        ¡Es un gusto tenerte aquí!
+      </p>
+    </div>
+
+    <!-- REUNIONES + CALENDARIO -->
+    <div class="grilla-2" style="margin-bottom:1.5rem;">
+
+      <!-- Cuadro reuniones -->
+      <div class="tarjeta">
+        <h3 style="margin-bottom:1rem;">📅 Reuniones</h3>
+
+        <p style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--texto-apagado); margin-bottom:0.5rem;">
+          Reuniones fijas
+        </p>
+        <div id="lista-reuniones-fijas">
+  <div class="reunion-item">
+    <div>
+      <div style="font-weight:600;">Cena del Señor</div>
+      <div style="font-size:0.85rem; color:var(--texto-secundario);">1° y 3° Domingo de cada mes</div>
+    </div>
+    <span class="badge badge-fija">Fija</span>
+  </div>
+  <div class="reunion-item">
+    <div>
+      <div style="font-weight:600;">Reunión General</div>
+      <div style="font-size:0.85rem; color:var(--texto-secundario);">Domingos · 11:30 hs</div>
+    </div>
+    <span class="badge badge-fija">Fija</span>
+  </div>
+  <div class="reunion-item">
+    <div>
+      <div style="font-weight:600;">Oración</div>
+      <div style="font-size:0.85rem; color:var(--texto-secundario);">Viernes · 21:30 hs</div>
+    </div>
+    <span class="badge badge-fija">Fija</span>
+  </div>
+  <div class="reunion-item">
+    <div>
+      <div style="font-weight:600;">Club Bíblico</div>
+      <div style="font-size:0.85rem; color:var(--texto-secundario);">Sábados · 14:00 hs · Jóvenes 12 a 18 años</div>
+    </div>
+    <span class="badge badge-fija">Fija</span>
+  </div>
+</div>
+
+        <p style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--texto-apagado); margin: 1rem 0 0.5rem;">
+          Próximas reuniones
+        </p>
+        <div id="lista-reuniones-futuras">
+  <div style="font-size:0.85rem; color:var(--texto-apagado); padding:0.5rem 0;">
+    Sin próximos eventos cargados.
+  </div>
+</div>
+      </div>
+
+      <!-- Mini calendario -->
+      <div class="tarjeta">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <button onclick="mesAnterior()" style="background:none; border:none; cursor:pointer; color:var(--texto-secundario); font-size:1.1rem;">‹</button>
+    <h3 id="titulo-calendario" style="font-size:1rem;"></h3>
+    <button onclick="mesSiguiente()" style="background:none; border:none; cursor:pointer; color:var(--texto-secundario); font-size:1.1rem;">›</button>
+  </div>
+  <div class="calendario-mini" id="calendario-iglesia"></div>
+
+  <!-- Leyenda -->
+  <div style="display:flex; flex-wrap:wrap; gap:0.6rem; margin-top:0.75rem; font-size:0.75rem; color:var(--texto-apagado);">
+    <span><span class="punto punto-azul"></span> Reunión General</span>
+    <span><span class="punto punto-morado"></span> Cena del Señor</span>
+    <span><span class="punto punto-amarillo"></span> Oración</span>
+    <span><span class="punto punto-verde"></span> Club Bíblico</span>
+    <span><span class="punto punto-rojo"></span> Evento especial</span>
+  </div>
+
+  <!-- Info del día seleccionado -->
+  <div id="info-dia-seleccionado">
+    <p style="font-weight:600; margin-bottom:0.5rem;" id="titulo-dia-sel"></p>
+    <div id="lista-eventos-dia"></div>
+  </div>
+</div>
+
+    </div>
+
+    <!-- REDES SOCIALES + UBICACIÓN -->
+    <div class="grilla-2" style="margin-bottom:1.5rem;">
+
+      <!-- Redes sociales -->
+      <div class="tarjeta">
+        <h3 style="margin-bottom:1rem;">📲 Redes sociales — ICE Marcos Paz</h3>
+<a href="#" id="link-instagram" target="_blank" class="red-social-btn">
+  <span style="font-size:1.2rem;">📸</span> Instagram
+</a>
+<a href="#" id="link-tiktok" target="_blank" class="red-social-btn">
+  <span style="font-size:1.2rem;">🎵</span> TikTok
+</a>
+<a href="#" id="link-youtube" target="_blank" class="red-social-btn">
+  <span style="font-size:1.2rem;">▶️</span> YouTube
+</a>
+
+<h3 style="margin-bottom:0.75rem; margin-top:1.25rem;">📖 Club Bíblico <small style="font-size:0.8rem; color:var(--texto-secundario);">— Jóvenes 12 a 18 años · Sábados 14hs</small></h3>
+<a href="#" id="link-instagram-cb" target="_blank" class="red-social-btn">
+  <span style="font-size:1.2rem;">📸</span> Instagram
+</a>
+<a href="#" id="link-tiktok-cb" target="_blank" class="red-social-btn">
+  <span style="font-size:1.2rem;">🎵</span> TikTok
+</a>
+      </div>
+
+      <!-- Ubicación -->
+      <div class="tarjeta">
+        <h3 style="margin-bottom:1rem;">📍 Ubicación</h3>
+        <p style="color:var(--texto-secundario); font-size:0.9rem; margin-bottom:0.75rem;" id="direccion-iglesia">
+          Leandro N. Alem 630, Marcos Paz, Buenos Aires
+        </p>
+        <!-- REEMPLAZÁ el src con tu iframe de Google Maps real -->
+        <!-- Para obtenerlo: buscá tu iglesia en maps.google.com → Compartir → Insertar mapa → copiá el src del iframe -->
+        <iframe
+          id="mapa-iglesia"
+          class="mapa-embed"
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1546.4303255727868!2d-58.82942063471741!3d-34.78652977996707!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bcef2aa31f35d9%3A0x5ef3192789cfe884!2sIglesia%20Cristiana%20Evangelica%20de%20Marcos%20paz!5e0!3m2!1ses!2sar!4v1777733645858!5m2!1ses!2sar" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+      </div>
+
+    </div>
+
+    <!-- ACCESO A MULTIMEDIA (lleva a multimedia.html) -->
+    <div class="acceso-multimedia">
+      <h3 style="margin-bottom:0.5rem;">📊 Avance Multimedia</h3>
+      <p style="color:var(--texto-secundario); margin-bottom:1.25rem;">
+        Seguimiento de asistencia, lecturas, social y fondo de la comunidad.
+      </p>
+      <a href="multimedia.html" class="btn btn-primario" style="font-size:1rem; padding:0.75rem 2rem;">
+        Ingresar al panel →
+      </a>
+    </div>
+
+  </main>
+
+
+ <!-- MODAL AGREGAR EVENTO -->
+<div id="modal-evento" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:500; align-items:center; justify-content:center; padding:1rem;">
+  <div class="tarjeta" style="width:460px; max-width:95vw;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+      <h3>📅 Agregar evento / reunión</h3>
+      <button onclick="document.getElementById('modal-evento').style.display='none'" style="background:none; border:none; color:var(--texto-secundario); cursor:pointer; font-size:1.2rem;">✕</button>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:1rem;">
+      <div>
+        <label style="display:block; margin-bottom:0.35rem; color:var(--texto-secundario); font-size:0.88rem;">Título del evento *</label>
+        <input type="text" id="ev-titulo" placeholder="Ej: Encuentro Zonal, Retiro, etc."
+          style="width:100%; padding:0.6rem; background:var(--fondo-principal); border:1px solid var(--fondo-borde); border-radius:8px; color:var(--texto-principal); font-size:0.95rem;">
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+        <div>
+          <label style="display:block; margin-bottom:0.35rem; color:var(--texto-secundario); font-size:0.88rem;">Fecha</label>
+          <input type="date" id="ev-fecha"
+            style="width:100%; padding:0.6rem; background:var(--fondo-principal); border:1px solid var(--fondo-borde); border-radius:8px; color:var(--texto-principal); font-size:0.95rem;">
+        </div>
+        <div>
+          <label style="display:block; margin-bottom:0.35rem; color:var(--texto-secundario); font-size:0.88rem;">Horario</label>
+          <input type="time" id="ev-hora"
+            style="width:100%; padding:0.6rem; background:var(--fondo-principal); border:1px solid var(--fondo-borde); border-radius:8px; color:var(--texto-principal); font-size:0.95rem;">
+        </div>
+      </div>
+      <div>
+        <label style="display:block; margin-bottom:0.35rem; color:var(--texto-secundario); font-size:0.88rem;">Lugar / Dirección</label>
+        <input type="text" id="ev-lugar" placeholder="Ej: Leandro N. Alem 630, Marcos Paz"
+          style="width:100%; padding:0.6rem; background:var(--fondo-principal); border:1px solid var(--fondo-borde); border-radius:8px; color:var(--texto-principal); font-size:0.95rem;">
+      </div>
+      <div>
+        <label style="display:block; margin-bottom:0.35rem; color:var(--texto-secundario); font-size:0.88rem;">Descripción (opcional)</label>
+        <textarea id="ev-descripcion" placeholder="Detalles del evento..."
+          style="width:100%; padding:0.6rem; background:var(--fondo-principal); border:1px solid var(--fondo-borde); border-radius:8px; color:var(--texto-principal); font-size:0.95rem; height:80px; resize:vertical;"></textarea>
+      </div>
+      <button class="btn btn-primario" style="width:100%; justify-content:center; padding:0.75rem;" onclick="guardarEvento()">
+        Guardar evento
+      </button>
+    </div>
+  </div>
+</div> 
+
+
+  <!-- MODAL LOGIN -->
+  <div id="modal-login" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:500; align-items:center; justify-content:center;">
+    <div class="tarjeta" style="width:360px; max-width:90vw;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h3>Ingresar</h3>
+        <button onclick="cerrarLogin()" style="background:none; border:none; color:var(--texto-secundario); cursor:pointer; font-size:1.2rem;">✕</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:1rem;">
+        <div>
+          <label style="display:block; margin-bottom:0.4rem; color:var(--texto-secundario); font-size:0.9rem;">DNI (usuario)</label>
+          <input type="text" id="input-dni" placeholder="Ej: 12345678" style="width:100%; padding:0.6rem 0.9rem; background:var(--fondo-principal); border:1px solid var(--fondo-borde); border-radius:8px; color:var(--texto-principal); font-size:1rem;">
+        </div>
+        <div>
+          <label style="display:block; margin-bottom:0.4rem; color:var(--texto-secundario); font-size:0.9rem;">Contraseña</label>
+          <input type="password" id="input-pass" placeholder="Tu contraseña" style="width:100%; padding:0.6rem 0.9rem; background:var(--fondo-principal); border:1px solid var(--fondo-borde); border-radius:8px; color:var(--texto-principal); font-size:1rem;">
+        </div>
+        <button class="btn btn-primario" style="width:100%; justify-content:center; padding:0.75rem;" onclick="intentarLogin()">Ingresar</button>
+        <a href="recuperar.html" style="text-align:center; color:var(--color-acento); font-size:0.85rem;">¿Olvidaste tu contraseña?</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/darkmode.js"></script>
+    <script src="js/auth.js"></script>      
+    <script src="js/calendar.js"></script>  
+    <script>
+    /* =============================================
+       SISTEMA DE SESIÓN (comparte con auth.js)
+       =============================================
+       sessionStorage = memoria que dura mientras
+       el navegador está abierto (se borra al cerrar)
+    ============================================= */
+
+    // Eventos con reuniones (formato: 'YYYY-MM-DD')
+    // Eventos especiales cargados por admin (se llenan desde el servidor)
+let eventosEspeciales = [];
+
+// Calcula qué reuniones fijas caen en una fecha dada
+function reunionesEnFecha(fechaStr) {
+  const fecha  = new Date(fechaStr + 'T00:00:00');
+  const diaSem = fecha.getDay(); // 0=Dom, 5=Vie, 6=Sáb
+  const diaNum = fecha.getDate();
+  const result = [];
+
+  // Reunión General — todos los domingos
+  if (diaSem === 0) {
+    result.push({ texto: 'Reunión General · 11:30 hs', clase: 'punto-azul', color: '#3b82f6' });
+  }
+
+  // Cena del Señor — 1° y 3° domingo
+  if (diaSem === 0) {
+    const semana = Math.ceil(diaNum / 7);
+    if (semana === 1 || semana === 3) {
+      result.push({ texto: 'Cena del Señor', clase: 'punto-morado', color: '#a78bfa' });
+    }
+  }
+
+  // Oración — viernes
+  if (diaSem === 5) {
+    result.push({ texto: 'Oración · 21:30 hs', clase: 'punto-amarillo', color: '#fbbf24' });
+  }
+
+  // Club Bíblico — sábados
+  if (diaSem === 6) {
+    result.push({ texto: 'Club Bíblico · 14:00 hs · Jóvenes 12-18', clase: 'punto-verde', color: '#34d399' });
+  }
+
+  // Eventos especiales
+  eventosEspeciales.filter(e => e.fecha === fechaStr).forEach(e => {
+    result.push({ texto: e.titulo + (e.hora ? ' · ' + e.hora : '') + (e.descripcion ? ' — ' + e.descripcion : ''), clase: 'punto-rojo', color: '#f87171' });
+  });
+
+  return result;
+}
+
+  
+
+    function abrirLogin() {
+      document.getElementById('modal-login').style.display = 'flex';
+    }
+    function cerrarLogin() {
+      document.getElementById('modal-login').style.display = 'none';
+    
+    };
+
+    function intentarLogin() {
+        const dni  = document.getElementById('input-dni').value.trim();
+        const pass = document.getElementById('input-pass').value;
+        loginConServidor(dni, pass,
+          function(usuario) {
+            cerrarLogin();
+            activarModoEdicion(usuario);
+          },
+          function(error) {
+            alert('Error: ' + error);
+          }
+        );
+      }
+
+    function verificarSesion() {
+        const u = getUsuarioActual();
+        if (u) activarModoEdicion(u);
+      }
+
+    function activarModoEdicion(user) {
+      document.getElementById('barra-edicion').style.display = 'flex';
+      document.getElementById('nombre-sesion').textContent = `👤 ${user.nombre} (${user.rol})`;
+    }
+
+    function cerrarSesion() {
+        logoutConServidor();
+      }
+
+    // Funciones de edición — por ahora muestran prompts simples
+    // Después se conectarán al backend Python
+    function editarVersiculo() {
+      const nuevo = prompt('Ingresá el nuevo versículo:', document.getElementById('versiculo-iglesia').textContent);
+      if (nuevo) document.getElementById('versiculo-iglesia').textContent = nuevo;
+    }
+    function editarBienvenida() {
+      const nuevo = prompt('Ingresá el texto de bienvenida:', document.getElementById('bienvenida-texto').textContent);
+      if (nuevo) document.getElementById('bienvenida-texto').textContent = nuevo;
+    }
+    function agregarReunion() {
+  document.getElementById('modal-evento').style.display = 'flex';
+}
+
+async function guardarEvento() {
+  const titulo = document.getElementById('ev-titulo').value.trim();
+  const fecha  = document.getElementById('ev-fecha').value;
+  const hora   = document.getElementById('ev-hora').value;
+  const lugar  = document.getElementById('ev-lugar').value.trim();
+  const desc   = document.getElementById('ev-descripcion').value.trim();
+
+  if (!titulo) { alert('El título es obligatorio'); return; }
+
+  // Armamos la descripción completa con el lugar
+  const descCompleta = [desc, lugar ? `📍 ${lugar}` : ''].filter(Boolean).join(' — ');
+
+  const data = await llamarAPI('/reuniones-iglesia', 'POST', {
+    titulo,
+    dia:         fecha,
+    hora:        hora ? hora.slice(0,5) + ' hs' : '',
+    descripcion: descCompleta
+  });
+
+  if (data.ok) {
+    document.getElementById('modal-evento').style.display = 'none';
+    // Limpiar campos
+    ['ev-titulo','ev-fecha','ev-hora','ev-lugar','ev-descripcion'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    await cargarReuniones();
+    await cargarEventosEspeciales();
+    alert('✅ Evento guardado');
+  } else {
+    alert('Error: ' + data.error);
+  }
+}
+
+    function editarRedes() {
+      const ig = prompt('Link de Instagram:', document.getElementById('link-instagram').href);
+      const tk = prompt('Link de TikTok:', document.getElementById('link-tiktok').href);
+      const yt = prompt('Link de YouTube:', document.getElementById('link-youtube').href);
+      if (ig) document.getElementById('link-instagram').href = ig;
+      if (tk) document.getElementById('link-tiktok').href = tk;
+      if (yt) document.getElementById('link-youtube').href = yt;
+    }
+
+// ── Carga los textos editables del servidor ──
+      document.addEventListener('DOMContentLoaded', function() {
+  renderCalIglesia();
+cargarEventosEspeciales();
+  verificarSesion();
+
+  // Cargar datos del servidor
+  llamarAPI('/contenido').then(function(data) {
+    if (!data.ok) return;
+    const d = data.datos;
+
+    // Dirección
+    if (d.direccion_iglesia) document.getElementById('direccion-iglesia').textContent = d.direccion_iglesia;
+
+    // Mapa
+    if (d.mapa_iglesia) document.getElementById('mapa-iglesia').src = d.mapa_iglesia;
+
+    // Redes ICE
+    if (d.instagram_iglesia) document.getElementById('link-instagram').href = d.instagram_iglesia;
+    if (d.tiktok_iglesia)    document.getElementById('link-tiktok').href    = d.tiktok_iglesia;
+    if (d.youtube_iglesia)   document.getElementById('link-youtube').href   = d.youtube_iglesia;
+
+    // Redes Club Bíblico
+    if (d.instagram_cb) document.getElementById('link-instagram-cb').href = d.instagram_cb;
+    if (d.tiktok_cb)    document.getElementById('link-tiktok-cb').href    = d.tiktok_cb;
+
+    // Versículo y bienvenida
+    if (d.versiculo_iglesia)  document.getElementById('versiculo-iglesia').textContent = d.versiculo_iglesia;
+    if (d.bienvenida_iglesia) document.getElementById('bienvenida-texto').textContent  = d.bienvenida_iglesia;
+  });
+
+  // Cargar reuniones del servidor
+  cargarReuniones();
+});
+
+async function cargarReuniones() {
+  const data = await llamarAPI('/reuniones-iglesia');
+  if (!data.ok) return;
+
+  const fijas   = data.datos.filter(r => r.tipo === 'fija');
+  const futuras = data.datos.filter(r => r.tipo === 'futura');
+
+  const listaFijas = document.getElementById('lista-reuniones-fijas');
+  listaFijas.innerHTML = fijas.map(r => `
+    <div class="reunion-item">
+      <div>
+        <div style="font-weight:600;">${r.titulo}</div>
+        <div style="font-size:0.85rem; color:var(--texto-secundario);">
+          ${r.dia}${r.hora ? ' · ' + r.hora : ''}
+          ${r.descripcion ? '<br><span style="font-size:0.8rem;">' + r.descripcion + '</span>' : ''}
+        </div>
+      </div>
+      <span class="badge badge-fija">Fija</span>
+    </div>
+  `).join('') || '<div style="color:var(--texto-apagado); font-size:0.85rem;">Sin reuniones cargadas</div>';
+
+  const listaFuturas = document.getElementById('lista-reuniones-futuras');
+  listaFuturas.innerHTML = futuras.map(r => {
+    // Extraemos la dirección si viene en la descripción
+    const partes     = (r.descripcion || '').split(' — ');
+    const desc       = partes[0] || '';
+    const lugarParte = partes.find(p => p.startsWith('📍')) || '';
+    const lugar      = lugarParte.replace('📍 ', '');
+    const mapsUrl    = lugar
+      ? `https://maps.google.com/?q=${encodeURIComponent(lugar)}`
+      : '';
+
+    return `
+      <div class="reunion-item" style="flex-direction:column; align-items:flex-start; gap:0.25rem;">
+        <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+          <div style="font-weight:600;">${r.titulo}</div>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <span class="badge badge-futura">Próxima</span>
+            ${getUsuarioActual()?.rol === 'admin' || getUsuarioActual()?.rol === 'colaborador'
+              ? `<button onclick="borrarEvento(${r.id})" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:0.8rem;">✕</button>`
+              : ''}
+          </div>
+        </div>
+        <div style="font-size:0.85rem; color:var(--texto-secundario);">
+          ${r.dia ? r.dia : ''}${r.hora ? ' · ' + r.hora : ''}
+        </div>
+        ${desc ? `<div style="font-size:0.82rem; color:var(--texto-apagado);">${desc}</div>` : ''}
+        ${lugar ? `<a href="${mapsUrl}" target="_blank" style="font-size:0.82rem; color:var(--color-acento); text-decoration:none;">📍 ${lugar} →</a>` : ''}
+      </div>
+    `;
+  }).join('') || '<div style="color:var(--texto-apagado); font-size:0.85rem;">Sin próximos eventos cargados.</div>';
+
+}
+const MESES_I = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS_I  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+let calMesI  = new Date().getMonth();
+let calAnioI = new Date().getFullYear();
+
+function mesAnterior()  { calMesI--; if(calMesI<0){calMesI=11;calAnioI--;} renderCalIglesia(); }
+function mesSiguiente() { calMesI++; if(calMesI>11){calMesI=0;calAnioI++;} renderCalIglesia(); }
+
+function renderCalIglesia() {
+  const cont   = document.getElementById('calendario-iglesia');
+  const titulo = document.getElementById('titulo-calendario');
+  if (!cont) return;
+  titulo.textContent = `${MESES_I[calMesI]} ${calAnioI}`;
+  const hoy       = new Date();
+  const primerDia = new Date(calAnioI, calMesI, 1).getDay();
+  const diasEnMes = new Date(calAnioI, calMesI + 1, 0).getDate();
+  let html = DIAS_I.map(d => `<div class="cal-dia-nombre">${d}</div>`).join('');
+  for (let i = 0; i < primerDia; i++) html += `<div class="cal-dia vacio"></div>`;
+  for (let d = 1; d <= diasEnMes; d++) {
+    const fecha   = `${calAnioI}-${String(calMesI+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const esHoy   = d === hoy.getDate() && calMesI === hoy.getMonth() && calAnioI === hoy.getFullYear();
+    const eventos = reunionesEnFecha(fecha);
+    const puntos  = eventos.length > 0
+      ? `<div class="puntos-cal">${eventos.map(e => `<span class="punto ${e.clase}"></span>`).join('')}</div>`
+      : '';
+    html += `<div class="cal-dia ${esHoy ? 'hoy' : ''}" onclick="seleccionarDiaIglesia('${fecha}')" style="cursor:pointer;">${d}${puntos}</div>`;
+  }
+  cont.innerHTML = html;
+}
+
+function seleccionarDiaIglesia(fecha) {
+  const eventos = reunionesEnFecha(fecha);
+  const panel   = document.getElementById('info-dia-seleccionado');
+  const titulo  = document.getElementById('titulo-dia-sel');
+  const lista   = document.getElementById('lista-eventos-dia');
+  if (eventos.length === 0) { panel.style.display = 'none'; return; }
+  const [a, m, d] = fecha.split('-');
+  titulo.textContent = `${parseInt(d)} de ${MESES_I[parseInt(m)-1]} ${a}`;
+  lista.innerHTML = eventos.map(e => `
+    <div class="evento-dia-item" style="border-left-color:${e.color};">
+      ${e.texto}
+    </div>
+  `).join('');
+  panel.style.display = 'block';
+}
+
+async function cargarEventosEspeciales() {
+  const data = await llamarAPI('/reuniones-iglesia');
+  if (!data.ok) return;
+  eventosEspeciales = data.datos.filter(r => r.tipo === 'futura' && r.dia);
+  renderCalIglesia();
+}
+
+
+async function borrarEvento(id) {
+  if (!confirm('¿Borrar este evento?')) return;
+  const data = await llamarAPI(`/reuniones-iglesia/${id}`, 'DELETE');
+  if (data.ok) {
+    await cargarReuniones();
+    await cargarEventosEspeciales();
+  }
+}
+
+  </script>
+</body>
+</html>

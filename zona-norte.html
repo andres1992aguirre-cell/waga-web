@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<!--
+  zona-oeste.html (copiá y renombrá para norte/sur/caba)
+-->
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zona Norte - WAGA</title>  <!-- CAMBIAR -->
+  <link rel="stylesheet" href="styles/main.css">
+  <style>
+    .calendario-zona {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
+      font-size: 0.85rem;
+    }
+    .cal-z-nombre { text-align:center; padding:0.4rem; color:var(--texto-apagado); font-weight:600; font-size:0.78rem; }
+    .cal-z-dia    { text-align:center; padding:0.5rem 0.25rem; border-radius:8px; cursor:pointer; color:var(--texto-secundario); transition:all 0.15s; min-height:42px; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; }
+    .cal-z-dia:hover { background:var(--fondo-borde); }
+    .cal-z-dia.hoy  { background:var(--color-primario); color:white; font-weight:700; }
+    .cal-z-dia.tiene-evento::after { content:''; display:block; width:5px; height:5px; border-radius:50%; background:#a78bfa; margin:2px auto 0; }
+    .cal-z-dia.vacio { cursor:default; }
+
+    /* Panel de eventos del día seleccionado */
+    #eventos-dia { margin-top:1.5rem; }
+    .evento-item {
+      background: var(--fondo-tarjeta);
+      border: 1px solid var(--fondo-borde);
+      border-left: 3px solid var(--color-primario);
+      border-radius: 0 8px 8px 0;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .evento-item:hover { border-left-color: var(--color-acento); background: var(--fondo-borde); }
+    .evento-item h4 { margin-bottom: 0.2rem; }
+    .evento-item p  { color:var(--texto-secundario); font-size:0.85rem; }
+
+    /* Modal de info de iglesia */
+    .modal-iglesia-contenido { width:500px; max-width:95vw; }
+    .info-iglesia-mapa { width:100%; height:220px; border-radius:8px; border:1px solid var(--fondo-borde); margin-top:0.75rem; }
+
+    /* Lista de iglesias */
+    .iglesia-lista-item {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0.65rem 0;
+      border-bottom:1px solid var(--fondo-borde);
+      cursor:pointer;
+      transition: background 0.15s;
+    }
+    .iglesia-lista-item:hover { color:var(--color-acento); }
+    .iglesia-lista-item:last-child { border-bottom:none; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-izquierda">
+      <a href="reunion18.html" class="btn btn-home">← Jóvenes +18</a>
+      <span style="font-weight:700; color:var(--color-acento);">Zona Oeste</span>  <!-- CAMBIAR -->
+    </div>
+    <div class="navbar-derecha">
+      <button id="btn-modo" class="btn-modo" onclick="cambiarModo()">☀️</button>
+      <button class="btn btn-secundario" onclick="abrirLoginZona()">🔐 Ingresar</button>
+    </div>
+  </nav>
+
+  <!-- Barra admin -->
+  <div id="barra-edicion-zona" style="display:none; background:rgba(59,130,246,0.1); border-bottom:1px solid rgba(59,130,246,0.3); padding:0.6rem 2rem; align-items:center; gap:1rem; font-size:0.85rem;">
+    <span style="color:var(--color-acento);">✏️ Modo edición</span>
+    <button class="btn btn-secundario" style="padding:0.3rem 0.8rem; font-size:0.8rem;" onclick="agregarIglesia()">+ Agregar iglesia</button>
+    <button class="btn btn-secundario" style="padding:0.3rem 0.8rem; font-size:0.8rem;" onclick="agregarEvento()">+ Agregar evento</button>
+    <span style="margin-left:auto;" id="nombre-sesion-zona"></span>
+    <button class="btn" style="padding:0.3rem 0.8rem; font-size:0.8rem; color:var(--texto-secundario);" onclick="cerrarSesionZona()">Cerrar sesión</button>
+  </div>
+
+  <main class="contenedor">
+
+    <!-- CALENDARIO GRANDE -->
+    <div class="tarjeta" style="margin-bottom:1.5rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <button onclick="mesAnteriorZona()" style="background:none; border:none; cursor:pointer; color:var(--texto-secundario); font-size:1.3rem;">‹</button>
+        <h3 id="titulo-cal-zona"></h3>
+        <button onclick="mesSiguienteZona()" style="background:none; border:none; cursor:pointer; color:var(--texto-secundario); font-size:1.3rem;">›</button>
+      </div>
+      <div class="calendario-zona" id="cal-zona"></div>
+      <p style="font-size:0.75rem; color:var(--texto-apagado); margin-top:0.75rem;">
+        <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#a78bfa; margin-right:4px;"></span>
+        Punto = hay reunión ese día
+      </p>
+
+      <!-- Eventos del día seleccionado -->
+      <div id="eventos-dia" style="display:none;">
+        <h4 style="margin-bottom:0.75rem;" id="titulo-eventos-dia"></h4>
+        <div id="lista-eventos-dia"></div>
+      </div>
+    </div>
+
+    <!-- LISTA DE IGLESIAS EN ESTA ZONA -->
+    <div class="tarjeta">
+      <h3 style="margin-bottom:1rem;">⛪ Iglesias en Zona Oeste:</h3>  <!-- CAMBIAR -->
+      <div id="lista-iglesias">
+        <!-- Se generan con JS -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL DE INFO DE IGLESIA -->
+  <div id="modal-iglesia" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:500; align-items:center; justify-content:center; padding:1rem; overflow-y:auto;">
+    <div class="tarjeta modal-iglesia-contenido">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
+        <div>
+          <h3 id="modal-iglesia-nombre"></h3>
+          <p id="modal-iglesia-dir" style="color:var(--texto-secundario); font-size:0.9rem; margin-top:0.25rem;"></p>
+        </div>
+        <button onclick="cerrarModalIglesia()" style="background:none; border:none; color:var(--texto-secundario); cursor:pointer; font-size:1.2rem; margin-left:1rem;">✕</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:0.5rem; font-size:0.9rem; margin-bottom:1rem;">
+        <div>📅 <strong>Reunión de jóvenes:</strong> <span id="modal-iglesia-horario"></span></div>
+        <div>📸 <strong>Instagram:</strong> <a id="modal-iglesia-ig" href="#" target="_blank" style="color:var(--color-acento);"></a></div>
+        <div>🔢 <strong>Edad:</strong> <span id="modal-iglesia-edad"></span></div>
+      </div>
+      <iframe id="modal-iglesia-mapa" class="info-iglesia-mapa" src="" allowfullscreen loading="lazy"></iframe>
+    </div>
+  </div>
+
+  <!-- MODAL LOGIN ZONA -->
+  <div id="modal-login-zona" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:500; align-items:center; justify-content:center;">
+    <div class="tarjeta" style="width:360px; max-width:90vw;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h3>Ingresar</h3>
+        <button onclick="cerrarLoginZona()" style="background:none; border:none; color:var(--texto-secundario); cursor:pointer; font-size:1.2rem;">✕</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:1rem;">
+        <div>
+          <label style="display:block; margin-bottom:0.4rem; color:var(--texto-secundario); font-size:0.9rem;">DNI</label>
+          <input type="text" id="z-dni" style="width:100%; padding:0.6rem; background:var(--fondo-principal); border:1px solid var(--fondo-borde); border-radius:8px; color:var(--texto-principal); font-size:1rem;" placeholder="12345678">
+        </div>
+        <div>
+          <label style="display:block; margin-bottom:0.4rem; color:var(--texto-secundario); font-size:0.9rem;">Contraseña</label>
+          <input type="password" id="z-pass" style="width:100%; padding:0.6rem; background:var(--fondo-principal); border:1px solid var(--fondo-borde); border-radius:8px; color:var(--texto-principal); font-size:1rem;" placeholder="Contraseña">
+        </div>
+        <button class="btn btn-primario" style="width:100%; justify-content:center; padding:0.75rem;" onclick="intentarLoginZona()">Ingresar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/darkmode.js"></script><script src="js/auth.js"></script>     
+    <script src="js/calendar.js"></script> 
+    
+  <script>
+    /* =============================================
+       DATOS DE ESTA ZONA (Oeste)
+       Cuando tengas el servidor, esto viene de la API
+    ============================================= */
+    const nombreZona = 'Zona Oeste';  // CAMBIAR en cada copia
+
+    const iglesiasZona = [
+      {
+        id: 1,
+        nombre: 'Iglesia de Marcos Paz',
+        direccion: 'Calle Ejemplo 1234, Marcos Paz',
+        horario: 'Sábados 19:00 hs',
+        instagram: 'https://instagram.com/',
+        edad: '+18 solteros',
+        mapa: 'https://maps.google.com/maps?q=Marcos+Paz,Buenos+Aires&output=embed',
+        eventos: ['2026-05-10', '2026-05-17', '2026-05-24']
+      },
+      {
+        id: 2,
+        nombre: 'Iglesia Morón Centro',
+        direccion: 'Av. Principal 500, Morón',
+        horario: 'Viernes 20:00 hs',
+        instagram: 'https://instagram.com/',
+        edad: '+18 solteros',
+        mapa: 'https://maps.google.com/maps?q=Moron,Buenos+Aires&output=embed',
+        eventos: ['2026-05-08', '2026-05-15', '2026-05-22']
+      }
+    ];
+
+    // Juntamos todos los eventos de todas las iglesias en un solo array
+    const todosEventos = [...new Set(iglesiasZona.flatMap(i => i.eventos))];
+
+    /* =============================================
+       VARIABLES DEL CALENDARIO
+    ============================================= */
+    const MESES_Z = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const DIAS_Z  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+    let zMes  = new Date().getMonth();
+    let zAnio = new Date().getFullYear();
+
+    function mesAnteriorZona() { zMes--; if(zMes<0){zMes=11;zAnio--;} renderCalZona(); }
+    function mesSiguienteZona(){ zMes++; if(zMes>11){zMes=0;zAnio++;} renderCalZona(); }
+
+    function renderCalZona() {
+      const cont  = document.getElementById('cal-zona');
+      const titulo = document.getElementById('titulo-cal-zona');
+      titulo.textContent = `${MESES_Z[zMes]} ${zAnio}`;
+
+      const hoy       = new Date();
+      const primerDia = new Date(zAnio, zMes, 1).getDay();
+      const diasEnMes = new Date(zAnio, zMes+1, 0).getDate();
+      const setEv     = new Set(todosEventos);
+
+      let html = '';
+      DIAS_Z.forEach(d => { html += `<div class="cal-z-nombre">${d}</div>`; });
+      for(let i=0; i<primerDia; i++) html += `<div class="cal-z-dia vacio"></div>`;
+
+      for(let d=1; d<=diasEnMes; d++){
+        const fecha = `${zAnio}-${String(zMes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const esHoy = d===hoy.getDate() && zMes===hoy.getMonth() && zAnio===hoy.getFullYear();
+        const tieneEv = setEv.has(fecha);
+        let cls = 'cal-z-dia';
+        if(esHoy)   cls += ' hoy';
+        if(tieneEv) cls += ' tiene-evento';
+        html += `<div class="${cls}" onclick="seleccionarDia('${fecha}')">${d}</div>`;
+      }
+      cont.innerHTML = html;
+    }
+
+    function seleccionarDia(fecha) {
+      const panel  = document.getElementById('eventos-dia');
+      const titulo = document.getElementById('titulo-eventos-dia');
+      const lista  = document.getElementById('lista-eventos-dia');
+
+      // Buscamos iglesias con eventos en esa fecha
+      const iglesiasHoy = iglesiasZona.filter(i => i.eventos.includes(fecha));
+      if(iglesiasHoy.length === 0) { panel.style.display='none'; return; }
+
+      const [anio,mes,dia] = fecha.split('-');
+      titulo.textContent = `Reuniones el ${parseInt(dia)} de ${MESES_Z[parseInt(mes)-1]}`;
+
+      lista.innerHTML = iglesiasHoy.map(ig => `
+        <div class="evento-item" onclick="verIglesia(${ig.id})">
+          <h4>⛪ ${ig.nombre}</h4>
+          <p>${ig.horario} — ${ig.direccion}</p>
+        </div>
+      `).join('');
+
+      panel.style.display = 'block';
+    }
+
+    /* =============================================
+       MODAL DE IGLESIA
+    ============================================= */
+    function verIglesia(id) {
+      const ig = iglesiasZona.find(i => i.id === id);
+      if(!ig) return;
+      document.getElementById('modal-iglesia-nombre').textContent  = ig.nombre;
+      document.getElementById('modal-iglesia-dir').textContent     = ig.direccion;
+      document.getElementById('modal-iglesia-horario').textContent = ig.horario;
+      document.getElementById('modal-iglesia-edad').textContent    = ig.edad;
+      document.getElementById('modal-iglesia-ig').textContent      = '@instagram';
+      document.getElementById('modal-iglesia-ig').href             = ig.instagram;
+      document.getElementById('modal-iglesia-mapa').src            = ig.mapa;
+      document.getElementById('modal-iglesia').style.display       = 'flex';
+
+      // También la mostramos en la lista de abajo
+    }
+
+    function cerrarModalIglesia() {
+      document.getElementById('modal-iglesia').style.display = 'none';
+      document.getElementById('modal-iglesia-mapa').src = '';  // Libera el mapa
+    }
+
+    /* =============================================
+       LISTA DE IGLESIAS
+    ============================================= */
+    function renderListaIglesias() {
+      const lista = document.getElementById('lista-iglesias');
+      lista.innerHTML = iglesiasZona.map(ig => `
+        <div class="iglesia-lista-item" onclick="verIglesia(${ig.id})">
+          <div>
+            <div style="font-weight:600;">${ig.nombre}</div>
+            <div style="font-size:0.85rem; color:var(--texto-secundario);">${ig.horario} — ${ig.direccion}</div>
+          </div>
+          <span style="color:var(--color-acento);">Ver →</span>
+        </div>
+      `).join('');
+    }
+
+    /* =============================================
+       LOGIN ZONA (comparte sesión con reunion18)
+    ============================================= */
+    const usuariosZona = {
+      'TU_DNI':   { pass: 'TU_PASS',  rol: 'admin',       nombre: 'Admin' },
+      '99999999': { pass: 'colab123', rol: 'colaborador', nombre: 'Colaborador' }
+    };
+
+    function abrirLoginZona()  { document.getElementById('modal-login-zona').style.display = 'flex'; }
+    function cerrarLoginZona() { document.getElementById('modal-login-zona').style.display = 'none'; }
+    document.getElementById('modal-login-zona').addEventListener('click', e => {
+      if(e.target === document.getElementById('modal-login-zona')) cerrarLoginZona();
+    });
+
+    function intentarLoginZona() {
+        const dni  = document.getElementById('z-dni').value.trim();
+        const pass = document.getElementById('z-pass').value;
+        loginConServidor(dni, pass,
+          function(usuario) {
+            cerrarLoginZona();
+            activarEdicionZona(usuario);
+          },
+          function(error) {
+            alert('Error: ' + error);
+          }
+        );
+      }
+
+    function activarEdicionZona(user) {
+      document.getElementById('barra-edicion-zona').style.display = 'flex';
+      document.getElementById('nombre-sesion-zona').textContent = `👤 ${user.nombre}`;
+    }
+
+    function cerrarSesionZona() {
+        logoutConServidor();
+      }
+
+    function agregarIglesia() {
+      const nombre = prompt('Nombre de la iglesia:');
+      const dir    = prompt('Dirección:');
+      const horario= prompt('Horario de reunión jóvenes:');
+      if(!nombre) return;
+      iglesiasZona.push({ id: Date.now(), nombre, direccion: dir, horario, instagram:'#', edad:'+18', mapa:'', eventos:[] });
+      renderListaIglesias();
+      alert('Iglesia agregada (se guardará en el servidor cuando lo conectemos)');
+    }
+
+    function agregarEvento() {
+      const fecha = prompt('Fecha del evento (YYYY-MM-DD):');
+      if(!fecha) return;
+      todosEventos.push(fecha);
+      renderCalZona();
+      alert('Evento agregado al calendario');
+    }
+
+    /* =============================================
+       INICIO
+    ============================================= */
+    document.addEventListener('DOMContentLoaded', function() {
+        renderCalZona();
+        renderListaIglesias();
+        const u = getUsuarioActual();
+        if (u) activarEdicionZona(u);
+      });
+  </script>
+</body>
+</html>

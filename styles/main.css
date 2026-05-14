@@ -1,0 +1,227 @@
+/* ================================================
+   VARIABLES GLOBALES - Los colores de toda la página
+   Si cambiás algo acá, cambia en TODOS lados
+   ================================================ */
+
+:root {
+  /* Modo OSCURO (predeterminado) */
+  --fondo-principal: #0a0f1e;       /* Azul muy oscuro, casi negro */
+  --fondo-tarjeta:   #111827;       /* Fondo de las tarjetas/cuadros */
+  --fondo-borde:     #1e2d4a;       /* Borde de los cuadros */
+  --color-primario:  #3b82f6;       /* Azul brillante - botones principales */
+  --color-secundario:#1d4ed8;       /* Azul más oscuro - hover */
+  --color-acento:    #60a5fa;       /* Azul claro - links y detalles */
+  --texto-principal: #f1f5f9;       /* Blanco roto - texto principal */
+  --texto-secundario:#94a3b8;       /* Gris claro - texto secundario */
+  --texto-apagado:   #475569;       /* Gris - texto menos importante */
+  --sombra:          0 4px 20px rgba(59, 130, 246, 0.15);
+}
+
+/* Modo CLARO - cuando el usuario cambia */
+body.modo-claro {
+  --fondo-principal: #f8fafc;
+  --fondo-tarjeta:   #ffffff;
+  --fondo-borde:     #e2e8f0;
+  --color-primario:  #2563eb;
+  --color-secundario:#1d4ed8;
+  --color-acento:    #3b82f6;
+  --texto-principal: #0f172a;
+  --texto-secundario:#475569;
+  --texto-apagado:   #94a3b8;
+  --sombra:          0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* ================================================
+   RESET - Borra los estilos raros que pone el navegador
+   ================================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;    /* Las medidas incluyen el borde */
+}
+
+/* ================================================
+   BASE - Estilos básicos del cuerpo de la página
+   ================================================ */
+body {
+  background-color: var(--fondo-principal);
+  color: var(--texto-principal);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  transition: background-color 0.3s, color 0.3s;  /* Transición suave al cambiar modo */
+}
+
+/* ================================================
+   BARRA DE NAVEGACIÓN (arriba de cada página)
+   ================================================ */
+.navbar {
+  display: flex;               /* Los elementos en fila */
+  justify-content: space-between;  /* Uno a la izquierda, otro a la derecha */
+  align-items: center;         /* Centrados verticalmente */
+  padding: 1rem 2rem;
+  background-color: var(--fondo-tarjeta);
+  border-bottom: 1px solid var(--fondo-borde);
+  position: sticky;            /* Se queda arriba al hacer scroll */
+  top: 0;
+  z-index: 100;
+}
+
+.navbar-izquierda {
+  display: flex;
+  align-items: center;
+  gap: 1rem;                   /* Espacio entre elementos */
+}
+
+.navbar-derecha {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* ================================================
+   BOTONES
+   ================================================ */
+.btn {
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-primario {
+  background-color: var(--color-primario);
+  color: white;
+}
+
+.btn-primario:hover {
+  background-color: var(--color-secundario);
+  transform: translateY(-1px);  /* Sube un poquito al pasar el mouse */
+}
+
+.btn-secundario {
+  background-color: transparent;
+  color: var(--color-acento);
+  border: 1px solid var(--color-acento);
+}
+
+.btn-secundario:hover {
+  background-color: var(--color-acento);
+  color: white;
+}
+
+.btn-home {
+  background-color: transparent;
+  color: var(--texto-secundario);
+  border: 1px solid var(--fondo-borde);
+}
+
+.btn-home:hover {
+  color: var(--texto-principal);
+  border-color: var(--color-acento);
+}
+
+/* Botón modo oscuro/claro */
+.btn-modo {
+  background: transparent;
+  border: 1px solid var(--fondo-borde);
+  color: var(--texto-secundario);
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.2s;
+}
+
+.btn-modo:hover {
+  border-color: var(--color-acento);
+  color: var(--texto-principal);
+}
+
+/* ================================================
+   TARJETAS / CUADROS
+   ================================================ */
+.tarjeta {
+  background-color: var(--fondo-tarjeta);
+  border: 1px solid var(--fondo-borde);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: var(--sombra);
+}
+
+/* ================================================
+   CONTENEDOR PRINCIPAL (centra el contenido)
+   ================================================ */
+.contenedor {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/* ================================================
+   TEXTOS
+   ================================================ */
+h1 { font-size: 2rem;   font-weight: 700; color: var(--texto-principal); }
+h2 { font-size: 1.5rem; font-weight: 600; color: var(--texto-principal); }
+h3 { font-size: 1.2rem; font-weight: 600; color: var(--texto-principal); }
+
+.texto-secundario { color: var(--texto-secundario); }
+.texto-acento     { color: var(--color-acento); }
+
+/* ================================================
+   VERSÍCULO (estilo especial para citas bíblicas)
+   ================================================ */
+.versiculo {
+  background: linear-gradient(135deg, var(--fondo-tarjeta), var(--fondo-borde));
+  border-left: 3px solid var(--color-primario);
+  padding: 1.25rem 1.5rem;
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+  color: var(--texto-secundario);
+  margin: 1.5rem 0;
+}
+
+/* ================================================
+   BOTÓN DONACIONES (fijo abajo a la derecha)
+   ================================================ */
+.btn-donacion {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background-color: var(--color-primario);
+  color: white;
+  padding: 0.75rem 1.25rem;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+  transition: all 0.2s;
+  z-index: 200;
+}
+
+.btn-donacion:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+}
+
+/* ================================================
+   RESPONSIVE - Para que se vea bien en celular
+   ================================================ */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0.75rem 1rem;
+  }
+  .contenedor {
+    padding: 1rem;
+  }
+  h1 { font-size: 1.5rem; }
+}

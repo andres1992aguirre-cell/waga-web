@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recuperar contraseña - WAGA</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-izquierda">
+      <a href="index.html" class="btn btn-home">← Home</a>
+    </div>
+    <div class="navbar-derecha">
+      <button id="btn-modo" class="btn-modo" onclick="cambiarModo()">☀️</button>
+    </div>
+  </nav>
+
+  <div style="min-height:80vh; display:flex; align-items:center; justify-content:center; padding:1rem;">
+    <div class="tarjeta" style="width:420px; max-width:95vw;">
+
+      <!-- PASO 1: Ingresar DNI -->
+      <div id="paso-1">
+        <h2 style="margin-bottom:0.5rem;">Recuperar contraseña</h2>
+        <p style="color:var(--texto-secundario); font-size:0.9rem; margin-bottom:1.5rem;">
+          Ingresá tu DNI y te enviaremos un código de verificación a tu mail registrado.
+        </p>
+        <div style="display:flex; flex-direction:column; gap:1rem;">
+          <div>
+            <label style="display:block; margin-bottom:0.4rem; color:var(--texto-secundario); font-size:0.9rem;">DNI</label>
+            <input type="text" id="rec-dni" placeholder="12345678" style="width:100%; padding:0.65rem; background:var(--fondo-principal); border:1px solid var(--fondo-borde); border-radius:8px; color:var(--texto-principal); font-size:1rem;">
+          </div>
+          <button class="btn btn-primario" style="width:100%; justify-content:center; padding:0.75rem;" onclick="pedirCodigo()">
+            Enviar código por mail
+          </button>
+          <p style="text-align:center; color:var(--texto-apagado); font-size:0.85rem;">
+            También podés recuperarla por WhatsApp escribiéndonos directamente.
+          </p>
+        </div>
+      </div>
+
+      <!-- PASO 2: Ingresar código (oculto hasta que llega el mail) -->
+      <div id="paso-2" style="display:none;">
+        <h2 style="margin-bottom:0.5rem;">Código de verificación</h2>
+        <p style="color:var(--texto-secundario); font-size:0.9rem; margin-bottom:1.5rem;">
+          Ingresá el código de 6 dígitos que te enviamos al mail.
+        </p>
+        <div style="display:flex; flex-direction:column; gap:1rem;">
+          <div>
+            <label style="display:block; margin-bottom:0.4rem; color:var(--texto-secundario); font-size:0.9rem;">Código</label>
+            <input type="text" id="rec-codigo" placeholder="123456" maxlength="6" style="width:100%; padding:0.65rem; background:var(--fondo-principal); border:1px solid var(--fondo-borde); border-radius:8px; color:var(--texto-principal); font-size:1.2rem; text-align:center; letter-spacing:0.3em;">
+          </div>
+          <button class="btn btn-primario" style="width:100%; justify-content:center; padding:0.75rem;" onclick="verificarCodigo()">
+            Verificar código
+          </button>
+          <button style="background:none; border:none; color:var(--color-acento); cursor:pointer; font-size:0.85rem;" onclick="mostrarPaso(1)">
+            ← Volver
+          </button>
+        </div>
+      </div>
+
+      <!-- PASO 3: Nueva contraseña -->
+      <div id="paso-3" style="display:none;">
+        <h2 style="margin-bottom:0.5rem;">Nueva contraseña</h2>
+        <p style="color:var(--texto-secundario); font-size:0.9rem; margin-bottom:1.5rem;">
+          Elegí tu nueva contraseña.
+        </p>
+        <div style="display:flex; flex-direction:column; gap:1rem;">
+          <div>
+            <label style="display:block; margin-bottom:0.4rem; color:var(--texto-secundario); font-size:0.9rem;">Nueva contraseña</label>
+            <input type="password" id="nueva-pass" placeholder="Mínimo 6 caracteres" style="width:100%; padding:0.65rem; background:var(--fondo-principal); border:1px solid var(--fondo-borde); border-radius:8px; color:var(--texto-principal); font-size:1rem;">
+          </div>
+          <div>
+            <label style="display:block; margin-bottom:0.4rem; color:var(--texto-secundario); font-size:0.9rem;">Repetir contraseña</label>
+            <input type="password" id="repetir-pass" placeholder="Repetí la contraseña" style="width:100%; padding:0.65rem; background:var(--fondo-principal); border:1px solid var(--fondo-borde); border-radius:8px; color:var(--texto-principal); font-size:1rem;">
+          </div>
+          <button class="btn btn-primario" style="width:100%; justify-content:center; padding:0.75rem;" onclick="cambiarPassword()">
+            Cambiar contraseña
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="js/darkmode.js"></script>
+  <script src="js/auth.js"></script>      ← ACÁ
+    <script src="js/calendar.js"></script>  ← si la página tiene calendario
+    
+  <script>
+    function mostrarPaso(n) {
+      [1,2,3].forEach(i => {
+        document.getElementById(`paso-${i}`).style.display = i===n ? 'block' : 'none';
+      });
+    }
+
+    function pedirCodigo() {
+      const dni = document.getElementById('rec-dni').value.trim();
+      if(!dni) { alert('Ingresá tu DNI'); return; }
+      // Cuando esté el servidor Python, acá se hace fetch('/api/recuperar', {dni})
+      // y el servidor manda el mail con el código
+      alert(`Se envió un código de verificación al mail registrado del DNI ${dni}.\n\n(Cuando conectemos el servidor esto mandará el mail real)`);
+      mostrarPaso(2);
+    }
+
+    function verificarCodigo() {
+      const codigo = document.getElementById('rec-codigo').value.trim();
+      if(codigo.length !== 6) { alert('El código tiene 6 dígitos'); return; }
+      // Acá se verifica contra el servidor
+      alert('Código correcto!');
+      mostrarPaso(3);
+    }
+
+    function cambiarPassword() {
+      const nueva   = document.getElementById('nueva-pass').value;
+      const repetir = document.getElementById('repetir-pass').value;
+      if(nueva.length < 6)        { alert('La contraseña debe tener al menos 6 caracteres'); return; }
+      if(nueva !== repetir)       { alert('Las contraseñas no coinciden'); return; }
+      alert('¡Contraseña cambiada! Ya podés ingresar con tu nueva contraseña.');
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>
